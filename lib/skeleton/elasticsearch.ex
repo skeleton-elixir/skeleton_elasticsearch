@@ -16,7 +16,7 @@ defmodule Skeleton.Elasticsearch do
   # Create index
 
   def create_index(index, query) do
-    result = Elastix.Index.create(url(), add_env(index), query)
+    result = Elastix.Index.create(url(), add_prefix(index), query)
     refresh(index)
     result
   end
@@ -24,7 +24,7 @@ defmodule Skeleton.Elasticsearch do
   # Save document
 
   def save_document(index, id, data) do
-    result = Elastix.Document.index(url(), add_env(index), "_doc", id, data)
+    result = Elastix.Document.index(url(), add_prefix(index), "_doc", id, data)
     refresh(index)
     result
   end
@@ -32,7 +32,7 @@ defmodule Skeleton.Elasticsearch do
   # Delete document
 
   def delete_document(index, id) do
-    result = Elastix.Document.delete(url(), index, "_doc", id)
+    result = Elastix.Document.delete(url(), add_prefix(index), "_doc", id)
     refresh(index)
     result
   end
@@ -41,14 +41,14 @@ defmodule Skeleton.Elasticsearch do
 
   def delete_all(index) do
     data = %{query: %{match_all: %{}}}
-    Elastix.Document.delete_matching(url(), add_env(index), data)
+    Elastix.Document.delete_matching(url(), add_prefix(index), data)
     refresh(index)
   end
 
   # Search
 
   def search(index, query) do
-    case Elastix.Search.search(url(), add_env(index), [], query) do
+    case Elastix.Search.search(url(), add_prefix(index), [], query) do
       {:ok, %{body: %{"error" => error}}} ->
         raise(RuntimeError, error)
 
@@ -63,7 +63,7 @@ defmodule Skeleton.Elasticsearch do
   # Refresh
 
   def refresh(index) do
-    if refresh?(), do: Elastix.Index.refresh(url(), add_env(index))
+    if refresh?(), do: Elastix.Index.refresh(url(), add_prefix(index))
   end
 
   # Url
@@ -72,5 +72,5 @@ defmodule Skeleton.Elasticsearch do
 
   defp refresh?(), do: Config.refresh()
 
-  defp add_env(index), do: "#{Config.prefix()}-#{index}"
+  defp add_prefix(index), do: "#{Config.prefix()}-#{index}"
 end
