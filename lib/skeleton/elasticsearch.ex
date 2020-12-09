@@ -8,6 +8,7 @@ defmodule Skeleton.Elasticsearch do
       def create_index(index, query), do: Elasticsearch.create_index(index, query)
       def save_document(index, id, data), do: Elasticsearch.save_document(index, id, data)
       def delete_document(index, id), do: Elasticsearch.delete_document(index, id)
+      def delete_documents(index, query), do: Elasticsearch.delete_documents(index, query)
       def delete_all(index), do: Elasticsearch.delete_all(index)
       def drop(index), do: Elasticsearch.drop(index)
       def search(index, query), do: Elasticsearch.search(index, query)
@@ -38,12 +39,21 @@ defmodule Skeleton.Elasticsearch do
     result
   end
 
+  # Delete documents
+
+  def delete_documents(index, query) do
+    result = Elastix.Document.delete_matching(url(), add_prefix(index), query)
+    refresh(index)
+    result
+  end
+
   # Delete all
 
   def delete_all(index) do
-    data = %{query: %{match_all: %{}}}
-    Elastix.Document.delete_matching(url(), add_prefix(index), data)
+    query = %{query: %{match_all: %{}}}
+    result = Elastix.Document.delete_matching(url(), add_prefix(index), query)
     refresh(index)
+    result
   end
 
   # Drop index
