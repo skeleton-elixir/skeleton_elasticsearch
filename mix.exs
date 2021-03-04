@@ -34,7 +34,8 @@ defmodule Skeleton.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:elastix, github: "werbitzky/elastix"}
+      {:elastix, github: "werbitzky/elastix"},
+      {:jason, "~> 1.2"}
     ]
   end
 

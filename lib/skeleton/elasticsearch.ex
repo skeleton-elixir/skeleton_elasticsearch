@@ -7,7 +7,10 @@ defmodule Skeleton.Elasticsearch do
     quote do
       # Index
       def create_index(index, data), do: Elasticsearch.create_index(index, data)
-      def update_index(index, data, params \\ []), do: Elasticsearch.update_index(index, data, params)
+
+      def update_index(index, data, params \\ []),
+        do: Elasticsearch.update_index(index, data, params)
+
       def truncate_index(index), do: Elasticsearch.truncate_index(index)
       def drop_index(index), do: Elasticsearch.drop_index(index)
 
@@ -16,6 +19,9 @@ defmodule Skeleton.Elasticsearch do
 
       def update_document(index, id, data),
         do: Elasticsearch.update_document(index, id, data)
+
+      def update_document_by_script(index, id, data),
+        do: Elasticsearch.update_document_by_script(index, id, data)
 
       def update_documents_by_query(index, query, data, params \\ []),
         do: Elasticsearch.update_documents_by_query(index, query, data, params)
@@ -98,6 +104,14 @@ defmodule Skeleton.Elasticsearch do
   def create_document(index, id, data), do: save_document(index, id, data)
 
   # Update document
+
+  def update_document_by_script(index, id, data) do
+    url = "#{url()}/#{add_prefix(index)}/_update/#{id}"
+
+    url
+    |> Elastix.HTTP.post(Jason.encode!(data))
+    |> parse_response(add_prefix(index))
+  end
 
   def update_document(index, id, data), do: save_document(index, id, data)
 
