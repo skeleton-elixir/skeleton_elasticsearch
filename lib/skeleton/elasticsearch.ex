@@ -20,11 +20,17 @@ defmodule Skeleton.Elasticsearch do
       def update_document(index, id, data),
         do: Elasticsearch.update_document(index, id, data)
 
+      def update_partial_document(index, id, data),
+        do: Elasticsearch.update_partial_document(index, id, data)
+
       def update_document_by_script(index, id, data),
         do: Elasticsearch.update_document_by_script(index, id, data)
 
       def update_documents_by_query(index, query, data, params \\ []),
         do: Elasticsearch.update_documents_by_query(index, query, data, params)
+
+      # def update_partial_documents_by_query(index, query, data, params \\ []),
+      #   do: Elasticsearch.update_documents_by_query(index, query, data, params)
 
       def save_document(index, data), do: Elasticsearch.save_document(index, data)
       def save_document(index, id, data), do: Elasticsearch.save_document(index, id, data)
@@ -32,6 +38,11 @@ defmodule Skeleton.Elasticsearch do
 
       def delete_documents_by_query(index, query),
         do: Elasticsearch.delete_documents_by_query(index, query)
+
+      def bulk(index, data), do: Elasticsearch.bulk(index, data)
+
+      def sync(index, query, preload, id_field, data, opts \\ []),
+        do: Elasticsearch.sync(index, query, preload, id_field, data, opts)
 
       # Search
       def search(index, query), do: Elasticsearch.search(index, query)
@@ -115,6 +126,16 @@ defmodule Skeleton.Elasticsearch do
 
   def update_document(index, id, data), do: save_document(index, id, data)
 
+  # Update partial document
+
+  def update_partial_document(index, id, data) do
+    url = "#{url()}/#{add_prefix(index)}/_update/#{id}"
+
+    url
+    |> Elastix.HTTP.post(Jason.encode!(%{doc: data}))
+    |> parse_response(add_prefix(index))
+  end
+
   # Update documents by query
 
   def update_documents_by_query(index, query, data, params \\ []) do
@@ -122,6 +143,21 @@ defmodule Skeleton.Elasticsearch do
     |> Elastix.Document.update_by_query(add_prefix(index), query, data, params)
     |> parse_response(add_prefix(index))
   end
+
+  # Update partial documents by query
+
+  # def update_partial_documents_by_query(index, query, data, params \\ []) do
+  #   url = "#{url()}/#{add_prefix(index)}/_update/#{id}"
+
+  #   url
+  #   |> Elastix.HTTP.post(Jason.encode!(%{doc: data}))
+  #   |> parse_response(add_prefix(index))
+
+  #   JSON.encode!(%{
+  #       script: script,
+  #       query: query
+  #     }
+  # end
 
   # Delete document
 
@@ -137,6 +173,62 @@ defmodule Skeleton.Elasticsearch do
     url()
     |> Elastix.Document.delete_matching(add_prefix(index), query)
     |> parse_response(add_prefix(index))
+  end
+
+  # Bulk
+
+  def bulk(index, data, opts \\ []) do
+    url()
+    |> Elastix.Bulk.post(data,
+      index: add_prefix(index),
+      type: "_doc",
+      httpoison_options: [timeout: opts[:timeout] || :infinity]
+    )
+    |> parse_response(add_prefix(index))
+  end
+
+  # Sync
+
+  def sync(index, query, preload, id_field, data, opts) do
+    synced_at = DateTime.utc_now()
+    repo = opts[:repo] || repo()
+
+    repo.transaction(fn ->
+      data =
+        query
+        |> repo.stream()
+        |> stream_preload(repo, opts[:size] || 500, preload)
+        |> Stream.map(fn item ->
+          [
+            %{index: %{_id: Map.get(item, id_field)}},
+            Map.put(data.(item), String.to_atom(last_synced_at_field()), synced_at)
+          ]
+        end)
+        |> Enum.to_list()
+        |> List.flatten()
+
+      bulk(index, data)
+    end)
+
+    delete_query = %{
+      query: %{
+        range: %{
+          last_synced_at_field() => %{
+            lt: synced_at
+          }
+        }
+      }
+    }
+
+    delete_documents_by_query(index, delete_query)
+  end
+
+  # Repo stream preload
+
+  def stream_preload(stream, repo, size, preloads) do
+    stream
+    |> Stream.chunk_every(size)
+    |> Stream.flat_map(&repo.preload(&1, preloads))
   end
 
   # Search
@@ -207,6 +299,10 @@ defmodule Skeleton.Elasticsearch do
   defp url(), do: Config.url()
 
   defp refresh?(), do: Config.refresh()
+
+  defp repo(), do: Config.repo()
+
+  defp last_synced_at_field(), do: Config.last_synced_at_field()
 
   defp add_prefix(index), do: "#{Config.prefix()}-#{index}"
 end

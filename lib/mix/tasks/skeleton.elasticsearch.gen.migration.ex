@@ -2,6 +2,8 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
   import Macro, only: [camelize: 1, underscore: 1]
   import Mix.Generator
 
+  alias Skeleton.Elasticsearch.Config
+
   @switches [template: :string]
   @aliases [t: :template]
 
@@ -79,8 +81,9 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
           dynamic: false,
           properties: %{
             name: %{type: "text"},
+            <%= Config.last_synced_at_field() %>: %{type: "date"},
             inserted_at: %{type: "date"},
-            updated_at: %{type: "date"}
+            updated_at: %{type: "date"},
           }
         }
       }
