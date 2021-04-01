@@ -17,6 +17,7 @@ defmodule Skeleton.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
       source_url: @url,
+      aliases: aliases(),
       maintainers: @maintainers,
       description: "Elixir structure",
       start_permanent: Mix.env() == :prod,
@@ -35,7 +36,10 @@ defmodule Skeleton.MixProject do
   defp deps do
     [
       {:elastix, github: "werbitzky/elastix"},
-      {:jason, "~> 1.2"}
+      {:jason, "~> 1.2"},
+      {:ecto_sql, "~> 3.0", only: :test},
+      {:postgrex, ">= 0.0.0", only: :test},
+      {:poison, "~> 3.1"}
     ]
   end
 
@@ -48,6 +52,17 @@ defmodule Skeleton.MixProject do
       licenses: ["MIT"],
       links: %{github: @url},
       files: ~w(lib) ++ ~w(CHANGELOG.md LICENSE mix.exs README.md)
+    ]
+  end
+
+  defp aliases do
+    [
+      test: [
+        "ecto.create --quiet",
+        "ecto.migrate --quiet",
+        "skeleton.elasticsearch.migrate --quiet",
+        "test"
+      ]
     ]
   end
 end

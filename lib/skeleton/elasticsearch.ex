@@ -6,49 +6,80 @@ defmodule Skeleton.Elasticsearch do
 
     quote do
       # Index
+      def get_index(index), do: Elasticsearch.get_index(index)
+
       def create_index(index, data), do: Elasticsearch.create_index(index, data)
 
       def update_index(index, data, params \\ []),
         do: Elasticsearch.update_index(index, data, params)
 
-      def truncate_index(index), do: Elasticsearch.truncate_index(index)
+      def truncate_index(index, url_params \\ []),
+        do: Elasticsearch.truncate_index(index, url_params)
+
       def drop_index(index), do: Elasticsearch.drop_index(index)
 
       # Document
-      def create_document(index, id, data), do: Elasticsearch.create_document(index, id, data)
+      def create_document(index, data) when is_map(data),
+        do: Elasticsearch.create_document(index, data, [])
 
-      def update_document(index, id, data),
-        do: Elasticsearch.update_document(index, id, data)
+      def create_document(index, data, url_params) when is_map(data),
+        do: Elasticsearch.create_document(index, data, url_params)
 
-      def update_partial_document(index, id, data),
-        do: Elasticsearch.update_partial_document(index, id, data)
+      def create_document(index, id, data),
+        do: Elasticsearch.create_document(index, id, data, [])
 
-      def update_document_by_script(index, id, data),
-        do: Elasticsearch.update_document_by_script(index, id, data)
+      def create_document(index, id, data, url_params),
+        do: Elasticsearch.create_document(index, id, data, url_params)
 
-      def update_documents_by_query(index, query, data, params \\ []),
-        do: Elasticsearch.update_documents_by_query(index, query, data, params)
+      def update_document(index, id, data, url_params \\ []),
+        do: Elasticsearch.update_document(index, id, data, url_params)
 
-      # def update_partial_documents_by_query(index, query, data, params \\ []),
-      #   do: Elasticsearch.update_documents_by_query(index, query, data, params)
+      def update_document_by_script(index, id, data, url_params \\ []),
+        do: Elasticsearch.update_document_by_script(index, id, data, url_params)
 
-      def save_document(index, data), do: Elasticsearch.save_document(index, data)
-      def save_document(index, id, data), do: Elasticsearch.save_document(index, id, data)
-      def delete_document(index, id), do: Elasticsearch.delete_document(index, id)
+      def update_documents_by_query(index, query, script, url_params \\ []),
+        do: Elasticsearch.update_documents_by_query(index, query, script, url_params)
 
-      def delete_documents_by_query(index, query),
-        do: Elasticsearch.delete_documents_by_query(index, query)
+      def save_document(index, data) when is_map(data),
+        do: Elasticsearch.save_document(index, data, [])
 
-      def bulk(index, data), do: Elasticsearch.bulk(index, data)
+      def save_document(index, data, url_params) when is_map(data),
+        do: Elasticsearch.save_document(index, data, url_params)
 
-      def sync(index, query, preload, id_field, data, opts \\ []),
-        do: Elasticsearch.sync(index, query, preload, id_field, data, opts)
+      def save_document(index, id, data),
+        do: Elasticsearch.save_document(index, id, data, [])
+
+      def save_document(index, id, data, url_params),
+        do: Elasticsearch.save_document(index, id, data, url_params)
+
+      def delete_document(index, id, url_params \\ []),
+        do: Elasticsearch.delete_document(index, id, url_params)
+
+      def delete_documents_by_query(index, query, url_params \\ []),
+        do: Elasticsearch.delete_documents_by_query(index, query, url_params)
+
+      def bulk(index, data, opts \\ [], url_params \\ []),
+        do: Elasticsearch.bulk(index, data, opts, url_params)
+
+      def sync(
+            index,
+            query,
+            preload,
+            id_field,
+            data,
+            opts \\ [],
+            bulk_opts \\ [],
+            url_params \\ []
+          ),
+          do:
+            Elasticsearch.sync(index, query, preload, id_field, data, opts, bulk_opts, url_params)
 
       # Search
       def search(index, query), do: Elasticsearch.search(index, query)
 
       # Refresh
-      def refresh(index, opts \\ []), do: Elasticsearch.refresh(index, opts)
+      def refresh(index, opts \\ []),
+        do: index |> Elasticsearch.add_prefix() |> Elasticsearch.refresh(opts)
 
       # Schema migrations
       def create_schema_migrations_index(),
@@ -57,6 +88,14 @@ defmodule Skeleton.Elasticsearch do
       def migrate_schema_version(version),
         do: Elasticsearch.migrate_schema_version(version)
     end
+  end
+
+  # Get Index
+
+  def get_index(index) do
+    url()
+    |> Elastix.Index.get(add_prefix(index))
+    |> parse_response(add_prefix(index))
   end
 
   # Create index
@@ -69,9 +108,9 @@ defmodule Skeleton.Elasticsearch do
 
   # Update index
 
-  def update_index(index, data, params) do
+  def update_index(index, data, url_params) do
     url()
-    |> Elastix.Mapping.put(add_prefix(index), nil, data, params)
+    |> Elastix.Mapping.put(add_prefix(index), nil, data, url_params)
     |> parse_response(add_prefix(index))
   end
 
@@ -85,111 +124,93 @@ defmodule Skeleton.Elasticsearch do
 
   # Truncate index
 
-  def truncate_index(index) do
+  def truncate_index(index, url_params) do
     index = "#{add_prefix(index)},-#{add_prefix("schema_migrations")}"
     query = %{query: %{match_all: %{}}}
 
     url()
-    |> Elastix.Document.delete_matching(index, query)
+    |> Elastix.Document.delete_matching(index, query, url_params)
     |> parse_response(index)
   end
 
   # Save document
 
-  def save_document(index, data) do
+  def save_document(index, id, data, url_params) do
     url()
-    |> Elastix.Document.index_new(add_prefix(index), "_doc", data)
+    |> Elastix.Document.index(add_prefix(index), "_doc", id, data, url_params)
     |> parse_response(add_prefix(index))
   end
 
-  def save_document(index, id, data) do
+  def save_document(index, data, url_params) do
     url()
-    |> Elastix.Document.index(add_prefix(index), "_doc", id, data)
+    |> Elastix.Document.index_new(add_prefix(index), "_doc", data, url_params)
     |> parse_response(add_prefix(index))
   end
 
   # Create document
 
-  def create_document(index, data), do: save_document(index, data)
+  def create_document(index, data, url_params), do: save_document(index, data, url_params)
 
-  def create_document(index, id, data), do: save_document(index, id, data)
+  def create_document(index, id, data, url_params), do: save_document(index, id, data, url_params)
 
   # Update document
 
-  def update_document_by_script(index, id, data) do
-    url = "#{url()}/#{add_prefix(index)}/_update/#{id}"
-
-    url
-    |> Elastix.HTTP.post(Jason.encode!(data))
+  def update_document(index, id, data, url_params) do
+    url()
+    |> Elastix.Document.update(add_prefix(index), "_doc", id, %{doc: data}, url_params)
     |> parse_response(add_prefix(index))
   end
 
-  def update_document(index, id, data), do: save_document(index, id, data)
+  # Update document by script
 
-  # Update partial document
-
-  def update_partial_document(index, id, data) do
-    url = "#{url()}/#{add_prefix(index)}/_update/#{id}"
-
-    url
-    |> Elastix.HTTP.post(Jason.encode!(%{doc: data}))
+  def update_document_by_script(index, id, script, url_params) do
+    url()
+    |> Elastix.Document.update(add_prefix(index), "_doc", id, %{script: script}, url_params)
     |> parse_response(add_prefix(index))
   end
 
   # Update documents by query
 
-  def update_documents_by_query(index, query, data, params \\ []) do
+  def update_documents_by_query(index, query, script, url_params) do
     url()
-    |> Elastix.Document.update_by_query(add_prefix(index), query, data, params)
+    |> Elastix.Document.update_by_query(add_prefix(index), query, script, url_params)
     |> parse_response(add_prefix(index))
   end
 
-  # Update partial documents by query
-
-  # def update_partial_documents_by_query(index, query, data, params \\ []) do
-  #   url = "#{url()}/#{add_prefix(index)}/_update/#{id}"
-
-  #   url
-  #   |> Elastix.HTTP.post(Jason.encode!(%{doc: data}))
-  #   |> parse_response(add_prefix(index))
-
-  #   JSON.encode!(%{
-  #       script: script,
-  #       query: query
-  #     }
-  # end
-
   # Delete document
 
-  def delete_document(index, id) do
+  def delete_document(index, id, url_params) do
     url()
-    |> Elastix.Document.delete(add_prefix(index), "_doc", id)
+    |> Elastix.Document.delete(add_prefix(index), "_doc", id, url_params)
     |> parse_response(add_prefix(index))
   end
 
   # Delete documents by query
 
-  def delete_documents_by_query(index, query) do
+  def delete_documents_by_query(index, query, url_params) do
     url()
-    |> Elastix.Document.delete_matching(add_prefix(index), query)
+    |> Elastix.Document.delete_matching(add_prefix(index), %{query: query}, url_params)
     |> parse_response(add_prefix(index))
   end
 
   # Bulk
 
-  def bulk(index, data, opts \\ []) do
+  def bulk(index, data, opts, url_params) do
     url()
-    |> Elastix.Bulk.post(data,
-      index: add_prefix(index),
-      type: "_doc",
-      httpoison_options: [timeout: opts[:timeout] || :infinity]
+    |> Elastix.Bulk.post(
+      data,
+      [
+        index: add_prefix(index),
+        type: "_doc"
+      ] ++ opts,
+      url_params
     )
     |> parse_response(add_prefix(index))
   end
 
   # Sync
 
-  def sync(index, query, preload, id_field, data, opts) do
+  def sync(index, query, preload, id_field, func_prepare_item, opts, bulk_opts, url_params) do
     synced_at = DateTime.utc_now()
     repo = opts[:repo] || repo()
 
@@ -201,34 +222,24 @@ defmodule Skeleton.Elasticsearch do
         |> Stream.map(fn item ->
           [
             %{index: %{_id: Map.get(item, id_field)}},
-            Map.put(data.(item), String.to_atom(last_synced_at_field()), synced_at)
+            Map.put(func_prepare_item.(item), String.to_atom(last_synced_at_field()), synced_at)
           ]
         end)
         |> Enum.to_list()
         |> List.flatten()
 
-      bulk(index, data)
+      bulk(index, data, bulk_opts, url_params)
     end)
 
     delete_query = %{
-      query: %{
-        range: %{
-          last_synced_at_field() => %{
-            lt: synced_at
-          }
+      range: %{
+        last_synced_at_field() => %{
+          lt: synced_at
         }
       }
     }
 
-    delete_documents_by_query(index, delete_query)
-  end
-
-  # Repo stream preload
-
-  def stream_preload(stream, repo, size, preloads) do
-    stream
-    |> Stream.chunk_every(size)
-    |> Stream.flat_map(&repo.preload(&1, preloads))
+    delete_documents_by_query(index, delete_query, [])
   end
 
   # Search
@@ -247,6 +258,14 @@ defmodule Skeleton.Elasticsearch do
 
   def refresh(index, opts \\ []) do
     if refresh?() || opts[:force], do: Elastix.Index.refresh(url(), index)
+  end
+
+  # Repo stream preload
+
+  defp stream_preload(stream, repo, size, preloads) do
+    stream
+    |> Stream.chunk_every(size)
+    |> Stream.flat_map(&repo.preload(&1, preloads))
   end
 
   # Parse response
@@ -291,7 +310,7 @@ defmodule Skeleton.Elasticsearch do
 
   def migrate_schema_version(version) do
     data = %{version: version}
-    save_document("schema_migrations", data)
+    save_document("schema_migrations", data, [])
   end
 
   # Url
@@ -304,5 +323,5 @@ defmodule Skeleton.Elasticsearch do
 
   defp last_synced_at_field(), do: Config.last_synced_at_field()
 
-  defp add_prefix(index), do: "#{Config.prefix()}-#{index}"
+  def add_prefix(index), do: "#{Config.prefix()}-#{index}"
 end
