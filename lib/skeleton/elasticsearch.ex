@@ -101,8 +101,13 @@ defmodule Skeleton.Elasticsearch do
   # Create index
 
   def create_index(index, data) do
+    data_with_last_synced_at =
+      put_in(data, [:mappings, :properties, String.to_atom(last_synced_at_field())], %{
+        type: :date
+      })
+
     url()
-    |> Elastix.Index.create(add_prefix(index), data)
+    |> Elastix.Index.create(add_prefix(index), data_with_last_synced_at)
     |> parse_response(add_prefix(index))
   end
 
@@ -215,20 +220,20 @@ defmodule Skeleton.Elasticsearch do
     repo = opts[:repo] || repo()
 
     repo.transaction(fn ->
-      data =
-        query
-        |> repo.stream()
-        |> stream_preload(repo, opts[:size] || 500, preload)
-        |> Stream.map(fn item ->
-          [
-            %{index: %{_id: Map.get(item, id_field)}},
-            Map.put(func_prepare_item.(item), String.to_atom(last_synced_at_field()), synced_at)
-          ]
-        end)
-        |> Enum.to_list()
-        |> List.flatten()
-
-      bulk(index, data, bulk_opts, url_params)
+      query
+      |> repo.stream()
+      |> stream_preload(repo, opts[:size] || 500, preload)
+      |> Stream.map(fn item ->
+        [
+          %{index: %{_id: Map.get(item, id_field)}},
+          Map.put(func_prepare_item.(item), String.to_atom(last_synced_at_field()), synced_at)
+        ]
+      end)
+      |> Stream.chunk_every(opts[:size] || 500)
+      |> Stream.each(fn rows ->
+        bulk(index, List.flatten(rows), bulk_opts, url_params)
+      end)
+      |> Enum.to_list()
     end)
 
     delete_query = %{
