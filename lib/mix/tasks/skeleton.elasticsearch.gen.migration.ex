@@ -40,6 +40,7 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
         case opts[:template] do
           "create" -> create_file(file, migration_for_create_template(assigns))
           "update" -> create_file(file, migration_for_update_template(assigns))
+          "drop" -> create_file(file, migration_for_drop_template(assigns))
           _ -> create_file(file, migration_template(assigns))
         end
 
@@ -110,6 +111,16 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
       }
 
       update_index("index", data<%= if @prefix, do: ", [prefix: prefix]" %>)
+    end
+  end
+  """)
+
+  embed_template(:migration_for_drop, """
+  defmodule <%= inspect @mod %> do
+    import <%= @elasticsearch %>
+
+    def change<%= if @prefix, do: "([prefix: prefix])" %> do
+      drop_index("index"<%= if @prefix, do: ", [prefix: prefix]" %>)
     end
   end
   """)
