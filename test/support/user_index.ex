@@ -9,6 +9,8 @@ defmodule Skeleton.App.UserIndex do
     %{
       name: user.name,
       email: user.email,
+      inserted_at: user.inserted_at,
+      updated_at: user.updated_at,
       last_synced_at: DateTime.utc_now()
     }
   end

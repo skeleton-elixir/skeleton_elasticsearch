@@ -9,6 +9,7 @@ defmodule Skeleton.Elasticsearch.Config do
   def priv, do: config(:priv, "priv/elasticsearch")
   def repo, do: config(:repo, nil)
   def last_synced_at_field, do: config(:last_synced_at_field, "last_synced_at")
+  def size, do: config(:size, 10)
 
   def config(key, default \\ nil) do
     Application.get_env(:skeleton_elasticsearch, key, default)
