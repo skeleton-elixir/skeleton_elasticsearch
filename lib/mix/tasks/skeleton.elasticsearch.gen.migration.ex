@@ -2,15 +2,22 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
   import Macro, only: [camelize: 1, underscore: 1]
   import Mix.Generator
 
-  @switches [template: :string]
+  @switches [template: :string, prefix: :boolean]
   @aliases [t: :template]
 
   def run(args) do
     case OptionParser.parse(args, aliases: @aliases, switches: @switches) do
       {opts, [name], []} ->
         elasticsearch = Application.get_env(:skeleton_elasticsearch, :elasticsearch)
+        prefix = opts[:prefix]
 
-        path = "priv/elasticsearch/migrations"
+        path =
+          if prefix do
+            "priv/elasticsearch/prefix_migrations"
+          else
+            "priv/elasticsearch/migrations"
+          end
+
         base_name = "#{underscore(name)}.exs"
         file = Path.join(path, "#{timestamp()}_#{base_name}")
 
@@ -26,7 +33,8 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
 
         assigns = [
           mod: Module.concat([elasticsearch, Migrations, camelize(name)]),
-          elasticsearch: elasticsearch
+          elasticsearch: elasticsearch,
+          prefix: prefix
         ]
 
         case opts[:template] do
@@ -67,11 +75,11 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
   defmodule <%= inspect @mod %> do
     import <%= @elasticsearch %>
 
-    def change do
+    def change<%= if @prefix, do: "([prefix: prefix])" %> do
       data = %{
         settings: %{
           index: %{
-            number_of_shards: 1,
+            number_of_shards: 3,
             number_of_replicas: 0
           }
         },
@@ -85,7 +93,7 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
         }
       }
 
-      create_index("index", data)
+      create_index("index", data<%= if @prefix, do: ", [prefix: prefix]" %>)
     end
   end
   """)
@@ -94,14 +102,14 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
   defmodule <%= inspect @mod %> do
     import <%= @elasticsearch %>
 
-    def change do
+    def change<%= if @prefix, do: "([prefix: prefix])" %> do
       data = %{
         properties: %{
           new_field: %{type: "text"}
         }
       }
 
-      update_index("index", data)
+      update_index("index", data<%= if @prefix, do: ", [prefix: prefix]" %>)
     end
   end
   """)

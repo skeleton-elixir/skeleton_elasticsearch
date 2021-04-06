@@ -16,7 +16,7 @@ defmodule Skeleton.ElasticsearchTest do
     end
 
     test "get_index" do
-      {:ok, %{"skeleton_elasticsearch_test-products" => index}} = get_index("products")
+      {:ok, %{"skeleton_elasticsearch-products-test" => index}} = get_index("products")
 
       assert index["settings"]["index"]["number_of_replicas"] == "0"
       assert index["settings"]["index"]["number_of_shards"] == "1"
@@ -28,7 +28,7 @@ defmodule Skeleton.ElasticsearchTest do
 
       update_index("products", data, [])
 
-      {:ok, %{"skeleton_elasticsearch_test-products" => index}} = get_index("products")
+      {:ok, %{"skeleton_elasticsearch-products-test" => index}} = get_index("products")
 
       assert index["settings"]["index"]["number_of_replicas"] == "0"
       assert index["settings"]["index"]["number_of_shards"] == "1"
@@ -44,9 +44,9 @@ defmodule Skeleton.ElasticsearchTest do
 
       assert res["_id"] == "123"
 
-      truncate_index("*products")
+      truncate_index("*products*")
 
-      {:ok, %{"skeleton_elasticsearch_test-products" => index}} = get_index("products")
+      {:ok, %{"skeleton_elasticsearch-products-test" => index}} = get_index("products")
 
       assert index["settings"]["index"]["number_of_replicas"] == "0"
       assert index["settings"]["index"]["number_of_shards"] == "1"
@@ -59,11 +59,11 @@ defmodule Skeleton.ElasticsearchTest do
     end
 
     test "drop_index" do
-      {:ok, %{"skeleton_elasticsearch_test-products" => _}} = get_index("products")
+      {:ok, %{"skeleton_elasticsearch-products-test" => _}} = get_index("products")
 
-      drop_index("*products")
+      drop_index("*products*", [])
 
-      {:error, "no such index [skeleton_elasticsearch_test-products]"} = get_index("products")
+      assert {:error, "no such index [skeleton_elasticsearch-products-test]"} = get_index("products")
     end
   end
 
@@ -215,5 +215,15 @@ defmodule Skeleton.ElasticsearchTest do
     UserIndex.create(:user, user)
 
     user
+  end
+
+  describe "Index name" do
+    test "returns index name without prefix" do
+      assert index_name("users") == "skeleton_elasticsearch-users-test"
+    end
+
+    test "returns index name with prefix" do
+      assert index_name("users", prefix: "tenant") == "skeleton_elasticsearch-tenant-users-test"
+    end
   end
 end
