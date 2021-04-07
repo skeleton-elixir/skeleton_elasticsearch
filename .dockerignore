@@ -1,0 +1,7 @@
+vendor
+deps
+_build
+.elixir_ls
+.vscode
+cover
+tmp
