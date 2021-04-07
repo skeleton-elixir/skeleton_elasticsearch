@@ -16,6 +16,9 @@ defmodule Skeleton.Elasticsearch.Search do
       def search(params, opts \\ []),
         do: Search.search(__MODULE__, @elasticsearch, @index, params, opts)
 
+      def build_query(params, opts \\ []),
+        do: Search.build_query(__MODULE__, params, opts)
+
       @before_compile Skeleton.Elasticsearch.Search
     end
   end
@@ -33,7 +36,7 @@ defmodule Skeleton.Elasticsearch.Search do
   # All
 
   def search(module, elasticsearch, index, params, opts) do
-    query = prepare_search(module, params, opts)
+    query = build_query(module, params, opts)
     elasticsearch.search(index, query)
   end
 
@@ -49,9 +52,9 @@ defmodule Skeleton.Elasticsearch.Search do
     end)
   end
 
-  # Prepare search
+  # Build Query
 
-  defp prepare_search(module, params, opts) do
+  def build_query(module, params, opts) do
     params
     |> build_filters(module)
     |> build_sorts(module, params)

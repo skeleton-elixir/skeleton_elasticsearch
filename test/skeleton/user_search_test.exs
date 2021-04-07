@@ -10,6 +10,23 @@ defmodule Skeleton.UserSearchTest do
     |> Map.put(:user, user)
   end
 
+  # Build Query
+
+  test "build query", ctx do
+    query =
+      UserSearch.build_query(%{id: ctx.user.id, sort_by: ["inserted_at_desc"], aggs_term: "id"},
+        from: 1,
+        size: 1
+      )
+
+    assert query == %{
+             aggs: %{id_term: %{terms: %{field: "_id", size: 10}}},
+             from: 1,
+             query: %{bool: %{must: [%{term: %{_id: ctx.user.id}}]}},
+             size: 1
+           }
+  end
+
   # Query all
 
   test "search all filtering by id", ctx do
