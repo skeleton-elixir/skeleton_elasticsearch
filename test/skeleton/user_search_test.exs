@@ -14,7 +14,8 @@ defmodule Skeleton.UserSearchTest do
 
   test "build query", ctx do
     query =
-      UserSearch.build_query(%{id: ctx.user.id, sort_by: ["inserted_at_desc"], aggs_term: "id"},
+      UserSearch.build_query(
+        %{id: ctx.user.id, sort_by: ["inserted_at_desc"], aggs_term: "id"},
         from: 1,
         size: 1
       )
@@ -25,6 +26,14 @@ defmodule Skeleton.UserSearchTest do
              query: %{bool: %{must: [%{term: %{_id: ctx.user.id}}]}},
              size: 1
            }
+  end
+
+  # Search from query
+
+  test "search from query", ctx do
+    query = UserSearch.build_query(%{}, size: 1)
+    [%{"_source" => source}] = UserSearch.search_from_query(query)["hits"]["hits"]
+    assert source["email"] == ctx.user.email
   end
 
   # Query all

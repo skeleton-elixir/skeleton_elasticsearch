@@ -13,11 +13,13 @@ defmodule Skeleton.Elasticsearch.Search do
 
       def add_query(query, new_query), do: Search.add_query(query, new_query)
 
+      def build_query(params, opts \\ []),
+        do: Search.build_query(__MODULE__, params, opts)
+
       def search(params, opts \\ []),
         do: Search.search(__MODULE__, @elasticsearch, @index, params, opts)
 
-      def build_query(params, opts \\ []),
-        do: Search.build_query(__MODULE__, params, opts)
+      def search_from_query(query), do: @elasticsearch.search(@index, query)
 
       @before_compile Skeleton.Elasticsearch.Search
     end
