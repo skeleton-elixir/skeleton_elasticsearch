@@ -13,19 +13,22 @@ defmodule Skeleton.UserSearchTest do
   # Build Query
 
   test "build query", ctx do
-    query =
+    res_query =
       UserSearch.build_query(
-        %{id: ctx.user.id, sort_by: ["inserted_at_desc"], aggs_term: "id"},
+        %{id: ctx.user.id, sort_by: [:inserted_at_desc], aggs_by: ["id"]},
         from: 1,
         size: 1
       )
 
-    assert query == %{
-             aggs: %{id_term: %{terms: %{field: "_id", size: 10}}},
-             from: 1,
-             query: %{bool: %{must: [%{term: %{_id: ctx.user.id}}]}},
-             size: 1
-           }
+    query = %{
+      aggs: %{id_term: %{terms: %{field: "_id", size: 10}}},
+      from: 1,
+      size: 1,
+      sort: [%{inserted_at: "desc"}],
+      query: %{bool: %{must: [%{term: %{_id: ctx.user.id}}]}}
+    }
+
+    assert res_query == query
   end
 
   # Search from query
@@ -39,7 +42,7 @@ defmodule Skeleton.UserSearchTest do
   # Query all
 
   test "search all filtering by id", ctx do
-    [res] = UserSearch.search(%{id: ctx.user.id})["hits"]["hits"]
+    [res] = UserSearch.search(%{"id" => ctx.user.id})["hits"]["hits"]
     assert res["_id"] == ctx.user.id
   end
 
@@ -92,7 +95,7 @@ defmodule Skeleton.UserSearchTest do
   # Aggs
 
   test "search all with aggs", ctx do
-    res = UserSearch.search(%{aggs_term: "id"}, size: 0)
+    res = UserSearch.search(%{"aggs_by" => [:id]}, size: 0)
     assert ctx.user.id == get_in(res, ["aggregations", "id_term", "buckets", Access.at(0), "key"])
   end
 

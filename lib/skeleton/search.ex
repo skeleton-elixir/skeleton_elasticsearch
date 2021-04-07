@@ -57,6 +57,8 @@ defmodule Skeleton.Elasticsearch.Search do
   # Build Query
 
   def build_query(module, params, opts) do
+    params = stringfy_map(params)
+
     params
     |> build_filters(module)
     |> build_sorts(module, params)
@@ -68,8 +70,8 @@ defmodule Skeleton.Elasticsearch.Search do
   # Build filters
 
   defp build_filters(params, module) do
-    Enum.reduce(params, %{}, fn f, search ->
-      apply(module, :filter_by, [search, f, params])
+    Enum.reduce(params, %{}, fn {k, v}, search ->
+      apply(module, :filter_by, [search, {to_string(k), v}, params])
     end)
   end
 
@@ -78,9 +80,8 @@ defmodule Skeleton.Elasticsearch.Search do
   defp build_sorts(query, module, params) do
     params
     |> Map.get(Config.sort_param(), [])
-    |> Enum.map(&String.to_atom(to_string(&1)))
-    |> Enum.reduce(query, fn o, acc_query ->
-      apply(module, :sort_by, [acc_query, o, params])
+    |> Enum.reduce(query, fn param, acc_query ->
+      apply(module, :sort_by, [acc_query, to_string(param), params])
     end)
   end
 
@@ -107,8 +108,17 @@ defmodule Skeleton.Elasticsearch.Search do
   # Build aggs
 
   defp build_aggs(query, module, params) do
-    Enum.reduce(params, query, fn o, acc_query ->
-      apply(module, :aggs_by, [acc_query, o, params])
+    params
+    |> Map.get(Config.aggs_param(), [])
+    |> Enum.reduce(query, fn param, acc_query ->
+      apply(module, :aggs_by, [acc_query, to_string(param), params])
     end)
+  end
+
+  defp stringfy_map(map) do
+    stringkeys = fn({k, v}, acc) ->
+      Map.put_new(acc, to_string(k), v)
+    end
+    Enum.reduce(map, %{}, stringkeys)
   end
 end

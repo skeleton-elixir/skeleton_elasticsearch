@@ -3,7 +3,7 @@ defmodule Skeleton.App.UserSearch do
 
   # Filters
 
-  def filter_by(query, {:id, id}, _params) do
+  def filter_by(query, {"id", id}, _params) do
     add_query(query, %{
       query: %{
         bool: %{
@@ -17,7 +17,7 @@ defmodule Skeleton.App.UserSearch do
     })
   end
 
-  def filter_by(query, {:name, name}, _params) do
+  def filter_by(query, {"name", name}, _params) do
     add_query(query, %{
       query: %{
         bool: %{
@@ -33,7 +33,7 @@ defmodule Skeleton.App.UserSearch do
 
   # Sort By
 
-  def sort_by(query, :inserted_at_desc, _params) do
+  def sort_by(query, "inserted_at_desc", _params) do
     add_query(query, %{
       sort: [%{inserted_at: "desc"}]
     })
@@ -41,7 +41,7 @@ defmodule Skeleton.App.UserSearch do
 
   # Aggs
 
-  def aggs_by(query, {:aggs_term, "id"}, _params) do
+  def aggs_by(query, "id", _params) do
     add_query(query, %{
       aggs: %{
         id_term: %{
