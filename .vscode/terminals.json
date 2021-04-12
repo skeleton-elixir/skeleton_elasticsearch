@@ -1,0 +1,26 @@
+{
+  "autorun": false,
+  "autokill": true,
+  "terminals": [
+    {
+      "name": "App",
+      "focus": true,
+      "commands": [
+        "docker-compose down",
+        "docker-compose up -d",
+        "docker-compose stop kibana",
+        "docker-compose exec app bash"
+      ]
+    },
+    {
+      "name": "Git"
+    },
+    {
+      "name": "Kibana",
+      "execute": false,
+      "commands": [
+        "docker-compose start kibana && docker-compose logs -f kibana"
+      ]
+    }
+  ]
+}
