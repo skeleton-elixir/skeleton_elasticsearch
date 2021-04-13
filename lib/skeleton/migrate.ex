@@ -12,7 +12,11 @@ defmodule Skeleton.Elasticsearch.Migrate do
     Enum.each(prefixes, fn prefix ->
       elasticsearch.create_schema_migrations_index(prefix: prefix)
       last_version = get_last_version(elasticsearch, prefix: prefix)
-      run_migrations(elasticsearch, last_version, opts ++ [prefix: prefix])
+      try do
+        run_migrations(elasticsearch, last_version, opts ++ [prefix: prefix])
+      rescue
+        e -> IO.inspect "#{prefix}: #{e.message}"
+      end
     end)
   end
 
