@@ -233,9 +233,13 @@ defmodule Skeleton.Elasticsearch do
     repo = opts[:repo] || repo()
     size = opts[:size] || 500
 
+    IO.inspect "====================="
+    IO.inspect(opts)
+    IO.inspect "====================="
+
     repo.transaction(fn ->
       query
-      |> repo.stream()
+      |> repo.stream(opts)
       |> stream_preload(repo, size, preload)
       |> Stream.map(fn item ->
         [

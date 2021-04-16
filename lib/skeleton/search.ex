@@ -39,7 +39,7 @@ defmodule Skeleton.Elasticsearch.Search do
 
   def search(module, elasticsearch, index, params, opts) do
     query = build_query(module, params, opts)
-    elasticsearch.search(index, query)
+    elasticsearch.search(index, query, opts)
   end
 
   # Add query
