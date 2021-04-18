@@ -15,7 +15,7 @@ services:
       ELASTICSEARCH_HOST: elasticsearch
       MIX_ENV: test
     volumes:
-      - .:/app
+      - .:/app:cached
 
   postgres:
     image: postgres:13.0
