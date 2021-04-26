@@ -15,7 +15,7 @@ defmodule Skeleton.Elasticsearch.Migrate do
       try do
         run_migrations(elasticsearch, last_version, opts ++ [prefix: prefix])
       rescue
-        e -> IO.inspect "#{e.message}", label: prefix
+        e -> IO.inspect "#{e}", label: prefix
       end
     end)
   end
