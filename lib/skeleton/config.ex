@@ -6,7 +6,7 @@ defmodule Skeleton.Elasticsearch.Config do
   def aggs_param, do: config(:aggs_param, "aggs_by")
   def namespace, do: config(:namespace, "app")
   def prefix, do: config(:prefix, nil)
-  def suffix, do: config(:suffix, "dev")
+  def suffix, do: config(:suffix, nil)
   def priv, do: config(:priv, "priv/elasticsearch")
   def repo, do: config(:repo, nil)
   def last_synced_at_field, do: config(:last_synced_at_field, "last_synced_at")
