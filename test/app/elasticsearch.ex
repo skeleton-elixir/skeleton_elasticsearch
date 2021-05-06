@@ -1,5 +1,5 @@
 defmodule Skeleton.App.Elasticsearch do
-  use Skeleton.Elasticsearch
+  use Skeleton.Elasticsearch, otp_app: :skeleton_elasticsearch
 
   def prefixes do
     ["tenant1"]

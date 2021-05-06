@@ -63,7 +63,8 @@ defmodule Skeleton.ElasticsearchTest do
 
       drop_index("*products*", [])
 
-      assert {:error, "no such index [skeleton_elasticsearch-products-test]"} = get_index("products")
+      assert {:error, "no such index [skeleton_elasticsearch-products-test]"} =
+               get_index("products")
     end
   end
 
@@ -168,7 +169,7 @@ defmodule Skeleton.ElasticsearchTest do
       user2 = create_user(name: "User 2")
       create_user(name: "User 3")
 
-      {:ok, _} = sync("users", User, [], :id, &%{&1 | name: "#{&1.name} updated"})
+      :ok = sync("users", User, [], :id, &%{&1 | name: "#{&1.name} updated"})
 
       users = search("users", %{query: %{match_all: %{}}})["hits"]["hits"]
       assert hd(users)["_source"]["name"] == "#{user1.name} updated"
@@ -176,11 +177,29 @@ defmodule Skeleton.ElasticsearchTest do
 
       Repo.delete(user1)
 
-      {:ok, _} = sync("users", User, [], :id, & &1)
+      :ok = sync("users", User, [], :id, & &1)
 
       users = search("users", %{query: %{match_all: %{}}})["hits"]["hits"]
       assert hd(users)["_source"]["name"] == user2.name
       assert length(users) == 2
+    end
+
+    test "sync without deleting outdated" do
+      user1 = create_user(name: "User 1")
+      create_user(name: "User 2")
+      create_user(name: "User 3")
+
+      :ok = sync("users", User, [], :id, & &1, [], delete_outdated: false)
+
+      users = search("users", %{query: %{match_all: %{}}})["hits"]["hits"]
+      assert length(users) == 3
+
+      Repo.delete(user1)
+
+      :ok = sync("users", User, [], :id, & &1, [], delete_outdated: false)
+
+      users = search("users", %{query: %{match_all: %{}}})["hits"]["hits"]
+      assert length(users) == 3
     end
   end
 
@@ -212,7 +231,7 @@ defmodule Skeleton.ElasticsearchTest do
       |> change(params)
       |> Repo.insert!()
 
-    UserIndex.create(:user, user)
+    UserIndex.create(user)
 
     user
   end

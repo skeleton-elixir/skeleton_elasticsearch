@@ -1,23 +1,24 @@
 defmodule Skeleton.Elasticsearch.Search do
   alias Skeleton.Elasticsearch.Config, as: Config
 
-  # Callbacks
-
   defmacro __using__(opts) do
     alias Skeleton.Elasticsearch.{Search, Config}
 
     quote do
-      @elasticsearch unquote(opts[:elasticsearch]) || Config.elasticsearch() ||
-                       raise("Elasticsearch module required")
+      @otp_app unquote(opts[:otp_app]) || raise("OTP App required")
+      @elasticsearch unquote(opts[:elasticsearch]) || raise("Elasticsearch required")
       @index unquote(opts[:index]) || raise("Index required")
+      @module __MODULE__
+
+      def config, do: Config.get_module_config(@otp_app, @elasticsearch)
 
       def add_query(query, new_query), do: Search.add_query(query, new_query)
 
       def build_query(params, opts \\ []),
-        do: Search.build_query(__MODULE__, params, opts)
+        do: Search.build_query(config(), @module, params, opts)
 
       def search(params, opts \\ []),
-        do: Search.search(__MODULE__, @elasticsearch, @index, params, opts)
+        do: Search.search(config(), @elasticsearch, @module, @index, params, opts)
 
       def search_from_query(query), do: @elasticsearch.search(@index, query)
 
@@ -37,8 +38,8 @@ defmodule Skeleton.Elasticsearch.Search do
 
   # All
 
-  def search(module, elasticsearch, index, params, opts) do
-    query = build_query(module, params, opts)
+  def search(config, elasticsearch, module, index, params, opts) do
+    query = build_query(config, module, params, opts)
     elasticsearch.search(index, query, opts)
   end
 
@@ -56,15 +57,15 @@ defmodule Skeleton.Elasticsearch.Search do
 
   # Build Query
 
-  def build_query(module, params, opts) do
+  def build_query(config, module, params, opts) do
     params = stringfy_map(params)
 
     params
     |> build_filters(module)
-    |> build_sorts(module, params)
+    |> build_sorts(config, module, params)
     |> build_size(opts)
     |> build_from(opts)
-    |> build_aggs(module, params)
+    |> build_aggs(config, module, params)
   end
 
   # Build filters
@@ -77,9 +78,9 @@ defmodule Skeleton.Elasticsearch.Search do
 
   # Build sorts
 
-  defp build_sorts(query, module, params) do
+  defp build_sorts(query, config, module, params) do
     params
-    |> Map.get(Config.sort_param(), [])
+    |> Map.get(Config.sort_param(config), [])
     |> Enum.reduce(query, fn param, acc_query ->
       apply(module, :sort_by, [acc_query, to_string(param), params])
     end)
@@ -107,18 +108,19 @@ defmodule Skeleton.Elasticsearch.Search do
 
   # Build aggs
 
-  defp build_aggs(query, module, params) do
+  defp build_aggs(query, config, module, params) do
     params
-    |> Map.get(Config.aggs_param(), [])
+    |> Map.get(Config.aggs_param(config), [])
     |> Enum.reduce(query, fn param, acc_query ->
       apply(module, :aggs_by, [acc_query, to_string(param), params])
     end)
   end
 
   defp stringfy_map(map) do
-    stringkeys = fn({k, v}, acc) ->
+    stringkeys = fn {k, v}, acc ->
       Map.put_new(acc, to_string(k), v)
     end
+
     Enum.reduce(map, %{}, stringkeys)
   end
 end

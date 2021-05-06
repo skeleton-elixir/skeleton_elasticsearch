@@ -1,9 +1,10 @@
 use Mix.Config
 
 # Sekeleton
-config :skeleton_elasticsearch,
+config :skeleton_elasticsearch, elasticsearch_modules: [Skeleton.App.Elasticsearch]
+
+config :skeleton_elasticsearch, Skeleton.App.Elasticsearch,
   repo: Skeleton.App.Repo,
-  elasticsearch: Skeleton.App.Elasticsearch,
   url: "http://#{System.get_env("ELASTICSEARCH_HOST", "localhost")}:9200",
   refresh: true,
   namespace: :skeleton_elasticsearch,
@@ -22,7 +23,3 @@ config :skeleton_elasticsearch, Skeleton.App.Repo,
 
 # Logger
 config :logger, :console, level: :error
-
-# Sekeleton
-config :skeleton_elasticsearch,
-  suffix: :test

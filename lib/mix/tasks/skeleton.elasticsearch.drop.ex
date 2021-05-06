@@ -2,8 +2,12 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Drop do
   def run(_args) do
     Mix.Task.run("app.start", [])
 
-    elasticsearch = Application.get_env(:skeleton_elasticsearch, :elasticsearch)
+    Mix.Project.config()[:app]
+    |> Application.get_env(:elasticsearch_modules)
+    |> Enum.each(&do_drop/1)
+  end
 
-    elasticsearch.drop_index("*")
+  defp do_drop(module) do
+    module.drop_index("*")
   end
 end

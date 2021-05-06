@@ -112,7 +112,7 @@ defmodule Skeleton.UserSearchTest do
       |> change(params)
       |> Repo.insert!()
 
-    UserIndex.create(:user, user)
+    UserIndex.create(user)
 
     user
   end

@@ -1,5 +1,5 @@
 defmodule Skeleton.App.UserSearch do
-  use Skeleton.Elasticsearch.Search, index: "users"
+  use Skeleton.App.Search, index: "users"
 
   # Filters
 

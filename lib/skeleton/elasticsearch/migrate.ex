@@ -1,20 +1,22 @@
 defmodule Skeleton.Elasticsearch.Migrate do
-  def run(opts) do
-    elasticsearch = Application.get_env(:skeleton_elasticsearch, :elasticsearch)
+  def run(module, opts) do
+    do_migrate(module, opts)
+  end
 
+  defp do_migrate(module, opts) do
     prefixes =
       if prefix = opts[:prefix] do
         [prefix]
       else
-        [nil] ++ elasticsearch.prefixes()
+        [nil] ++ module.prefixes()
       end
 
     Enum.each(prefixes, fn prefix ->
-      elasticsearch.create_schema_migrations_index(prefix: prefix)
-      last_version = get_last_version(elasticsearch, prefix: prefix)
+      module.create_schema_migrations_index(prefix: prefix)
+      last_version = get_last_version(module, prefix: prefix)
 
       try do
-        run_migrations(elasticsearch, last_version, opts ++ [prefix: prefix])
+        run_migrations(module, last_version, opts ++ [prefix: prefix])
       rescue
         e in [RuntimeError, Mix.Error] -> IO.inspect(e.message, label: prefix)
         e -> IO.inspect(e, label: prefix)

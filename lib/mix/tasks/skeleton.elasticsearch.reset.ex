@@ -2,10 +2,14 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Reset do
   def run(args) do
     Mix.Task.run("app.start", [])
 
-    elasticsearch = Application.get_env(:skeleton_elasticsearch, :elasticsearch)
+    Mix.Project.config()[:app]
+    |> Application.get_env(:elasticsearch_modules)
+    |> Enum.each(&do_reset(&1, args))
+  end
 
-    elasticsearch.drop_index("*")
-    elasticsearch.refresh("*", force: true)
+  defp do_reset(module, args) do
+    module.drop_index("*")
+    module.refresh("*", force: true)
 
     Mix.Tasks.Skeleton.Elasticsearch.Migrate.run(args)
   end

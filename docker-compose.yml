@@ -6,8 +6,6 @@ services:
       dockerfile: Dockerfile
       context: .
     command: /bin/sh -c "while sleep 1000; do :; done"
-    ports:
-      - 4000:4000
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_USERNAME: postgres
@@ -21,8 +19,6 @@ services:
     image: postgres:13.0
     environment:
       POSTGRES_PASSWORD: 123456
-    ports:
-      - 5432:5432
     volumes:
       - postgres_volume:/var/lib/postgresql/data
 
@@ -37,8 +33,6 @@ services:
       ES_JAVA_OPTS: '-Xms256m -Xmx256m'
       network.bind_host: 0.0.0.0
       network.host: 0.0.0.0
-    ports:
-      - "9200:9200"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://elasticsearch:9200/"]
       start_period: 30s
@@ -51,9 +45,7 @@ services:
   kibana:
     image: kibana:7.8.1
     environment:
-      ELASTICSEARCH_HOSTS: http://elasticsearch
-    ports:
-      - 5601:5601
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
 
 volumes:
   postgres_volume:

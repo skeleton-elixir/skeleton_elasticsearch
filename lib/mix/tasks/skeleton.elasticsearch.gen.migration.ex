@@ -8,44 +8,49 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
   def run(args) do
     case OptionParser.parse(args, aliases: @aliases, switches: @switches) do
       {opts, [name], []} ->
-        elasticsearch = Application.get_env(:skeleton_elasticsearch, :elasticsearch)
-        prefix = opts[:prefix]
-
-        path =
-          if prefix do
-            "priv/elasticsearch/prefix_migrations"
-          else
-            "priv/elasticsearch/migrations"
-          end
-
-        base_name = "#{underscore(name)}.exs"
-        file = Path.join(path, "#{timestamp()}_#{base_name}")
-
-        unless File.dir?(path), do: create_directory(path)
-
-        fuzzy_path = Path.join(path, "*_#{base_name}")
-
-        if Path.wildcard(fuzzy_path) != [] do
-          Mix.raise(
-            "migration can't be created, there is already a migration file with name #{name}."
-          )
-        end
-
-        assigns = [
-          mod: Module.concat([elasticsearch, Migrations, camelize(name)]),
-          elasticsearch: elasticsearch,
-          prefix: prefix
-        ]
-
-        case opts[:template] do
-          "create" -> create_file(file, migration_for_create_template(assigns))
-          "update" -> create_file(file, migration_for_update_template(assigns))
-          "drop" -> create_file(file, migration_for_drop_template(assigns))
-          _ -> create_file(file, migration_template(assigns))
-        end
+        Mix.Project.config()[:app]
+        |> Application.get_env(:elasticsearch_modules)
+        |> Enum.each(&do_gen_migration(&1, name, opts))
 
       {_, _, _} ->
         Mix.raise("expected elasticsearch.gen.migration to receive a name")
+    end
+  end
+
+  defp do_gen_migration(module, name, opts) do
+    prefix = opts[:prefix]
+
+    path =
+      if prefix do
+        "priv/elasticsearch/prefix_migrations"
+      else
+        "priv/elasticsearch/migrations"
+      end
+
+    base_name = "#{underscore(name)}.exs"
+    file = Path.join(path, "#{timestamp()}_#{base_name}")
+
+    unless File.dir?(path), do: create_directory(path)
+
+    fuzzy_path = Path.join(path, "*_#{base_name}")
+
+    if Path.wildcard(fuzzy_path) != [] do
+      Mix.raise(
+        "migration can't be created, there is already a migration file with name #{name}."
+      )
+    end
+
+    assigns = [
+      mod: Module.concat([module, Migrations, camelize(name)]),
+      elasticsearch: module,
+      prefix: prefix
+    ]
+
+    case opts[:template] do
+      "create" -> create_file(file, migration_for_create_template(assigns))
+      "update" -> create_file(file, migration_for_update_template(assigns))
+      "drop" -> create_file(file, migration_for_drop_template(assigns))
+      _ -> create_file(file, migration_template(assigns))
     end
   end
 
