@@ -28,11 +28,12 @@ defmodule Skeleton.Elasticsearch.Search do
 
   defmacro __before_compile__(_) do
     quote do
-      def filter_by(query, _, _args), do: query
-      def sort_by(query, _, _args), do: query
-      def aggs_by(query, _, _args), do: query
+      def start_query(_params), do: %{}
+      def filter_by(query, _, _params), do: query
+      def sort_by(query, _, _params), do: query
+      def aggs_by(query, _, _params), do: query
 
-      defoverridable filter_by: 3, sort_by: 3, aggs_by: 3
+      defoverridable start_query: 1, filter_by: 3, sort_by: 3, aggs_by: 3
     end
   end
 
@@ -46,11 +47,11 @@ defmodule Skeleton.Elasticsearch.Search do
   # Add query
 
   def add_query(query, new_query) do
-    Map.merge(query, new_query, fn k, v1, v2 ->
+    Map.merge(query, new_query, fn _k, v1, v2 ->
       cond do
         is_list(v2) -> v1 ++ v2
         is_map(v2) -> add_query(v1, v2)
-        true -> Map.put(v1, k, v2)
+        true -> v2
       end
     end)
   end
@@ -60,8 +61,10 @@ defmodule Skeleton.Elasticsearch.Search do
   def build_query(config, module, params, opts) do
     params = stringfy_map(params)
 
-    params
-    |> build_filters(module)
+    config
+    |> Config.start_query()
+    |> Map.merge(module.start_query(params))
+    |> build_filters(module, params)
     |> build_sorts(config, module, params)
     |> build_size(opts)
     |> build_from(opts)
@@ -70,8 +73,8 @@ defmodule Skeleton.Elasticsearch.Search do
 
   # Build filters
 
-  defp build_filters(params, module) do
-    Enum.reduce(params, %{}, fn {k, v}, search ->
+  defp build_filters(query, module, params) do
+    Enum.reduce(params, query, fn {k, v}, search ->
       apply(module, :filter_by, [search, {to_string(k), v}, params])
     end)
   end

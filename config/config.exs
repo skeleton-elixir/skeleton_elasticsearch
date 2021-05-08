@@ -7,6 +7,9 @@ config :skeleton_elasticsearch, Skeleton.App.Elasticsearch,
   repo: Skeleton.App.Repo,
   url: "http://#{System.get_env("ELASTICSEARCH_HOST", "localhost")}:9200",
   refresh: true,
+  start_query: %{
+    size: 10
+  },
   namespace: :skeleton_elasticsearch,
   suffix: :test
 

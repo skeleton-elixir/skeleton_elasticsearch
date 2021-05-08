@@ -8,6 +8,7 @@ defmodule Skeleton.Elasticsearch.Config do
   def suffix(conf), do: config(conf, :suffix, nil)
   def priv(conf), do: config(conf, :priv, "priv/elasticsearch")
   def repo(conf), do: config(conf, :repo, nil)
+  def start_query(conf), do: config(conf, :start_query, %{})
   def size(conf), do: config(conf, :size, 10)
   def last_synced_at_field(conf), do: config(conf, :last_synced_at_field, "last_synced_at")
   def sync_modules(conf), do: config(conf, :sync_modules, [])
