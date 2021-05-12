@@ -1,4 +1,5 @@
 defmodule Skeleton.Elasticsearch.Search do
+
   alias Skeleton.Elasticsearch.Config, as: Config
 
   defmacro __using__(opts) do
@@ -22,18 +23,19 @@ defmodule Skeleton.Elasticsearch.Search do
 
       def search_from_query(query), do: @elasticsearch.search(@index, query)
 
+      def start_query(_params), do: %{}
+
+      defoverridable start_query: 1
+
       @before_compile Skeleton.Elasticsearch.Search
     end
   end
 
   defmacro __before_compile__(_) do
     quote do
-      def start_query(_params), do: %{}
       def filter_by(query, _, _params), do: query
       def sort_by(query, _, _params), do: query
       def aggs_by(query, _, _params), do: query
-
-      defoverridable start_query: 1, filter_by: 3, sort_by: 3, aggs_by: 3
     end
   end
 

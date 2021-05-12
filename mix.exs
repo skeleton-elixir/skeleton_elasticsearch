@@ -1,8 +1,8 @@
-defmodule Skeleton.MixProject do
+defmodule SkeletonElasticsearch.MixProject do
   use Mix.Project
 
   @version "1.0.0"
-  @url "https://github.com/skeleton-elixir/skeleton_elasticsearch"
+  @source_url "https://github.com/skeleton-elixir/skeleton_elasticsearch"
   @maintainers [
     "Diego Nogueira",
     "Jhonathas Matos"
@@ -13,13 +13,13 @@ defmodule Skeleton.MixProject do
       name: "SkeletonElasticsearch",
       app: :skeleton_elasticsearch,
       version: @version,
-      elixir: "~> 1.10",
+      elixir: "~> 1.8",
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
-      source_url: @url,
+      source_url: @source_url,
       aliases: aliases(),
       maintainers: @maintainers,
-      description: "Elixir structure",
+      description: description(),
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -35,12 +35,17 @@ defmodule Skeleton.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:elastix, github: "werbitzky/elastix"},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:elastix, "~> 0.9.0"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0", only: :test},
       {:postgrex, ">= 0.0.0", only: :test},
       {:poison, "~> 3.1"}
     ]
+  end
+
+  defp description() do
+    "O Skeleton Elasticsearch ajuda a criar composes para queries feitas usando o Elastix"
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/app"]
@@ -50,8 +55,11 @@ defmodule Skeleton.MixProject do
     [
       maintainers: @maintainers,
       licenses: ["MIT"],
-      links: %{github: @url},
-      files: ~w(lib) ++ ~w(CHANGELOG.md LICENSE mix.exs README.md)
+      files: ~w(lib CHANGELOG.md LICENSE mix.exs README.md),
+      links: %{
+        "GitHub" => @source_url,
+        "Changelog" => "#{@source_url}/blob/master/CHANGELOG.md"
+      }
     ]
   end
 
