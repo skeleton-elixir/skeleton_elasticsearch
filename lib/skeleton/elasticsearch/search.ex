@@ -69,6 +69,7 @@ defmodule Skeleton.Elasticsearch.Search do
     |> build_size(opts)
     |> build_from(opts)
     |> build_aggs(config, module, params)
+    |> build_function_score()
   end
 
   # Build filters
@@ -118,6 +119,31 @@ defmodule Skeleton.Elasticsearch.Search do
       apply(module, :aggs_by, [acc_query, to_string(param), params])
     end)
   end
+
+  defp build_function_score(%{query: %{function_score: _}} = query) do
+    {function_query, query} = pop_in(query, [:query, :function_score])
+    {query, root_query} = pop_in(query, [:query])
+
+    query =
+      if query == %{} do
+        %{}
+      else
+        %{query: query}
+      end
+
+    Map.merge(
+      %{
+        query: %{
+          function_score: Map.merge(query, function_query)
+        }
+      },
+      root_query
+    )
+  end
+
+  defp build_function_score(query), do: query
+
+  # stringfy map
 
   defp stringfy_map(map) do
     stringkeys = fn {k, v}, acc ->

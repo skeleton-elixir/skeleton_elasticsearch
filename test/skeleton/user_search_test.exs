@@ -92,6 +92,19 @@ defmodule Skeleton.UserSearchTest do
     assert indexed_user["_id"] == user.id
   end
 
+  test "search all and sort by random score" do
+    create_user()
+
+    users =
+      UserSearch.search(%{
+        "name" => "Name",
+        "random_seed" => "1234",
+        "sort_by" => ["random"]
+      })["hits"]["hits"]
+
+    assert length(users) == 2
+  end
+
   # Aggs
 
   test "search all with aggs", ctx do

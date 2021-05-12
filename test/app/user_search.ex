@@ -39,6 +39,19 @@ defmodule Skeleton.App.UserSearch do
     })
   end
 
+  def sort_by(query, "random", %{"random_seed" => seed}) do
+    add_query(query, %{
+      query: %{
+        function_score: %{
+          random_score: %{
+            seed: seed,
+            field: "_seq_no"
+          }
+        }
+      }
+    })
+  end
+
   # Aggs
 
   def aggs_by(query, "id", _params) do
