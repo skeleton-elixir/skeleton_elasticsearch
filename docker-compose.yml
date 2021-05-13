@@ -11,7 +11,6 @@ services:
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: 123456
       ELASTICSEARCH_HOST: elasticsearch
-      MIX_ENV: test
     volumes:
       - .:/app:cached
 
