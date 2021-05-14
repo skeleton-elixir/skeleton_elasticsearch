@@ -82,8 +82,6 @@ defmodule Skeleton.Elasticsearch do
       def migrate_schema_version(version, opts \\ []),
         do: Elasticsearch.migrate_schema_version(config(), version, opts)
 
-      def migrate(opts \\ []), do: Skeleton.Elasticsearch.Migrate.run(@module, opts)
-
       def prefixes, do: []
 
       defoverridable prefixes: 0
