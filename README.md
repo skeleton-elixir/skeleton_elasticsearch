@@ -9,7 +9,7 @@ O Skeleton Elasticsearch ajuda a criar composes para queries feitas usando o Ela
 
 def deps do
   [
-    {:skeleton_elasticsearch, "~> 1.0.0"}
+    {:skeleton_elasticsearch, "~> 1.2.0"}
   ]
 end
 ```
