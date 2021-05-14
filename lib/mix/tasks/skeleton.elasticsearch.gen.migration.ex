@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
   def run(args) do
     case OptionParser.parse(args, aliases: @aliases, switches: @switches) do
       {opts, [name], []} ->
-        Mix.Project.config()[:app]
+        Skeleton.Elasticsearch.Config.get_app_name()
         |> Application.get_env(:elasticsearch_modules)
         |> Enum.each(&do_gen_migration(&1, name, opts))
 

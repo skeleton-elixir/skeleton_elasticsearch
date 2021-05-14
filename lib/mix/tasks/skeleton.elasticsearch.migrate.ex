@@ -7,12 +7,6 @@ defmodule Mix.Tasks.Skeleton.Elasticsearch.Migrate do
 
     {opts, [], []} = OptionParser.parse(args, aliases: @aliases, switches: @switches)
 
-    Mix.Project.config()[:app]
-    |> Application.get_env(:elasticsearch_modules)
-    |> Enum.each(&do_migrate(&1, opts))
-  end
-
-  defp do_migrate(module, opts) do
-    module.migrate(opts)
+    Skeleton.Elasticsearch.Migrate.run(opts)
   end
 end

@@ -1,13 +1,9 @@
 defmodule Mix.Tasks.Skeleton.Elasticsearch.Drop do
-  def run(_args) do
+  def run(args) do
     Mix.Task.run("app.start", [])
 
-    Mix.Project.config()[:app]
-    |> Application.get_env(:elasticsearch_modules)
-    |> Enum.each(&do_drop/1)
-  end
+    {opts, [], []} = OptionParser.parse(args, aliases: [], switches: [])
 
-  defp do_drop(module) do
-    module.drop_index("*")
+    Skeleton.Elasticsearch.Drop.run(opts)
   end
 end
