@@ -1,3 +1,8 @@
+1.2.2
+------
+#### Changes
+* Get app name fixed
+
 1.2.1
 ------
 #### Changes
