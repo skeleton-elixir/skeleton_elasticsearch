@@ -25,7 +25,7 @@ defmodule Skeleton.Elasticsearch.Config do
 
   def get_app_name() do
     {app, _, _} =
-      Enum.find(:application.which_applications(), fn {app, _, _} ->
+      Enum.find(Application.loaded_applications(), fn {app, _, _} ->
         Application.get_env(app, :elasticsearch_modules)
       end)
 
