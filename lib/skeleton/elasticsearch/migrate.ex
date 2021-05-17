@@ -1,6 +1,6 @@
 defmodule Skeleton.Elasticsearch.Migrate do
   def run(opts) do
-    Mix.Project.config()[:app]
+    Skeleton.Elasticsearch.Config.get_app_name()
     |> Application.get_env(:elasticsearch_modules)
     |> Enum.each(&do_migrate(&1, opts))
   end

@@ -24,15 +24,11 @@ defmodule Skeleton.Elasticsearch.Config do
   end
 
   def get_app_name() do
-    if app = Mix.Project.config()[:app] do
-      app
-    else
-      {app, _, _} =
-        Enum.find(:application.which_applications(), fn {app, _, _} ->
-          Application.get_env(app, :elasticsearch_modules)
-        end)
+    {app, _, _} =
+      Enum.find(:application.which_applications(), fn {app, _, _} ->
+        Application.get_env(app, :elasticsearch_modules)
+      end)
 
-      app
-    end
+    app
   end
 end
