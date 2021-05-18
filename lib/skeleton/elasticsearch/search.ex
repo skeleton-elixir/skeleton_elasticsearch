@@ -1,5 +1,4 @@
 defmodule Skeleton.Elasticsearch.Search do
-
   alias Skeleton.Elasticsearch.Config, as: Config
 
   defmacro __using__(opts) do

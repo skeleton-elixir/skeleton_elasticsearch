@@ -1,6 +1,8 @@
 defmodule Skeleton.Elasticsearch.Drop do
+  alias Skeleton.Elasticsearch.Config
+
   def run(_opts) do
-    Skeleton.Elasticsearch.Config.get_app_name()
+    Config.get_app_name()
     |> Application.get_env(:elasticsearch_modules)
     |> Enum.each(&do_drop/1)
   end

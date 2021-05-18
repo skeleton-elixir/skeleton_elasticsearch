@@ -1,6 +1,8 @@
 defmodule Skeleton.Elasticsearch.Migrate do
+  alias Skeleton.Elasticsearch.Config
+
   def run(opts) do
-    Skeleton.Elasticsearch.Config.get_app_name()
+    Config.get_app_name()
     |> Application.get_env(:elasticsearch_modules)
     |> Enum.each(&do_migrate(&1, opts))
   end
@@ -20,8 +22,8 @@ defmodule Skeleton.Elasticsearch.Migrate do
       try do
         run_migrations(module, last_version, opts ++ [prefix: prefix])
       rescue
-        e in [RuntimeError, Mix.Error] -> IO.inspect(e.message, label: prefix)
-        e -> IO.inspect(e, label: prefix)
+        e in [RuntimeError, Mix.Error] -> IO.inspect(e.message <> " in #{prefix || "default"}")
+        e -> IO.inspect(e <> " in #{prefix || "default"}")
       end
     end)
   end
@@ -89,12 +91,12 @@ defmodule Skeleton.Elasticsearch.Migrate do
             elasticsearch.migrate_schema_version(version, opts)
 
             if !opts[:quiet] do
-              Mix.shell().info("#{inspect(module)} migrated")
+              IO.inspect("#{inspect(module)} migrated")
             end
 
           {:error, error} ->
-            Mix.shell().info("#{inspect(module)} failed")
-            Mix.raise(error)
+            IO.inspect("#{inspect(module)} failed")
+            raise(error)
         end
       end)
     end

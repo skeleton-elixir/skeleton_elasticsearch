@@ -1,6 +1,8 @@
 defmodule Skeleton.Elasticsearch.Sync do
+  alias Skeleton.Elasticsearch.Config
+
   def run(opts) do
-    app = Skeleton.Elasticsearch.Config.get_app_name()
+    app = Config.get_app_name()
 
     app
     |> Application.get_env(:elasticsearch_modules)
