@@ -1,7 +1,7 @@
 defmodule SkeletonElasticsearch.MixProject do
   use Mix.Project
 
-  @version "1.2.4"
+  @version "1.2.5"
   @source_url "https://github.com/skeleton-elixir/skeleton_elasticsearch"
   @maintainers [
     "Diego Nogueira",
@@ -38,7 +38,7 @@ defmodule SkeletonElasticsearch.MixProject do
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:elastix, "~> 0.9.0"},
       {:jason, "~> 1.2"},
-      {:ecto_sql, "~> 3.0", only: :test},
+      {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0", only: :test},
       {:poison, "~> 3.1"}
     ]

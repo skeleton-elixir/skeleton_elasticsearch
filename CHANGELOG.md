@@ -1,3 +1,8 @@
+1.2.5
+------
+#### Changes
+* Sync improved
+
 1.2.4
 ------
 #### Changes
