@@ -67,6 +67,7 @@ end
 
 defmodule App.UserIndex do
   import App.Elasticsearch
+  import Ecto.Query
   alias App.Repo
 
   @index "users"
@@ -106,6 +107,11 @@ defmodule App.UserIndex do
   # Sync
 
   def sync(query \\ User) do
+    query =
+      from(u in query,
+        order_by: [u.updated_at, u.id]
+      )
+
     sync(@index, query, @preload, :id, &build/1)
   end
 end

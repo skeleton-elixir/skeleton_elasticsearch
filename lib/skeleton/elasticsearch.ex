@@ -1,5 +1,6 @@
 defmodule Skeleton.Elasticsearch do
   alias Skeleton.Elasticsearch.Config
+  import Ecto.Query
 
   defmacro __using__(opts) do
     alias Skeleton.Elasticsearch
@@ -229,7 +230,8 @@ defmodule Skeleton.Elasticsearch do
       rows,
       [
         index: index,
-        type: "_doc"
+        type: "_doc",
+        httpoison_options: [timeout: :infinity]
       ] ++ (opts[:bulk_opts] || []),
       url_params
     )
@@ -245,29 +247,59 @@ defmodule Skeleton.Elasticsearch do
     sync_interval = opts[:sync_interval] || sync_interval(config)
     delete_outdated = Keyword.get(opts, :delete_outdated, true)
 
-    stream =
-      query
-      |> repo.stream(Keyword.put(opts, :max_rows, size))
-      |> stream_preload(repo, size, preload)
-      |> Stream.map(fn item ->
-        [
-          %{index: %{_id: Map.get(item, id_field)}},
-          Map.put(func_prepare_item.(item), last_synced_at_field(config), synced_at)
-        ]
-      end)
-      |> Stream.chunk_every(size)
-      |> Stream.each(fn rows ->
-        bulk(config, index, List.flatten(rows), url_params, opts)
-        if sync_interval > 0, do: :timer.sleep(sync_interval)
-      end)
-
-    repo.transaction(fn -> Stream.run(stream) end, timeout: :infinity)
+    do_sync(%{
+      query: query,
+      repo: repo,
+      size: size,
+      offset: 0,
+      sync_interval: sync_interval,
+      synced_at: synced_at,
+      config: config,
+      index: index,
+      preload: preload,
+      id_field: id_field,
+      func_prepare_item: func_prepare_item,
+      url_params: url_params,
+      opts: opts
+    })
 
     if delete_outdated do
       delete_outdated_documents(config, index, synced_at, [], [])
     end
 
     :ok
+  end
+
+  defp do_sync(opts) do
+    query = from(opts[:query], limit: ^opts[:size], offset: ^opts[:offset])
+
+    result =
+      query
+      |> opts[:repo].all()
+      |> opts[:repo].preload(opts[:preload])
+
+    if length(result) > 0 do
+      rows =
+        Enum.map(result, fn item ->
+          [
+            %{index: %{_id: Map.get(item, opts[:id_field])}},
+            Map.put(
+              opts[:func_prepare_item].(item),
+              last_synced_at_field(opts[:config]),
+              opts[:synced_at]
+            )
+          ]
+        end)
+
+      {:ok, _} =
+        bulk(opts[:config], opts[:index], List.flatten(rows), opts[:url_params], opts[:opts])
+
+      if opts[:sync_interval] > 0, do: :timer.sleep(opts[:sync_interval])
+
+      do_sync(%{opts | offset: opts[:offset] + opts[:size]})
+    else
+      nil
+    end
   end
 
   # Delete outdated docs
@@ -316,14 +348,6 @@ defmodule Skeleton.Elasticsearch do
 
   def refresh(config, index, opts \\ []) do
     if refresh?(config) || opts[:force], do: Elastix.Index.refresh(url(config), index)
-  end
-
-  # Repo stream preload
-
-  defp stream_preload(stream, repo, size, preloads) do
-    stream
-    |> Stream.chunk_every(size)
-    |> Stream.flat_map(&repo.preload(&1, preloads))
   end
 
   # Parse response

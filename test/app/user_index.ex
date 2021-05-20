@@ -1,5 +1,6 @@
 defmodule Skeleton.App.UserIndex do
   import Skeleton.App.Elasticsearch
+  import Ecto.Query
 
   @index "users"
 
@@ -36,6 +37,11 @@ defmodule Skeleton.App.UserIndex do
   # Sync
 
   def sync(query \\ User) do
+    query =
+      from(u in query,
+        order_by: [u.updated_at, u.id]
+      )
+
     sync(@index, query, [], :id, &build/1)
   end
 end

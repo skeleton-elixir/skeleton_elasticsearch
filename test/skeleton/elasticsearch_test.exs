@@ -172,7 +172,8 @@ defmodule Skeleton.ElasticsearchTest do
       :ok = sync("users", User, [], :id, &%{&1 | name: "#{&1.name} updated"})
 
       users = search("users", %{query: %{match_all: %{}}})["hits"]["hits"]
-      assert hd(users)["_source"]["name"] == "#{user1.name} updated"
+
+      assert Enum.all?(users, fn user -> String.contains?(user["_source"]["name"], "updated") end)
       assert length(users) == 3
 
       Repo.delete(user1)
