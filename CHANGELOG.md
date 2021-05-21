@@ -1,3 +1,8 @@
+1.2.6
+------
+#### Changes
+* Bulk changed
+
 1.2.5
 ------
 #### Changes
