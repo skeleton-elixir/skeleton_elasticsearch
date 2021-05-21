@@ -17,6 +17,9 @@ end
 ```elixir
 # config/config.exs
 
+config :elastix,
+  httpoison_options: [timeout: 300_000, recv_timeout: 300_000]
+
 config :app, elasticsearch_modules: [App.Elasticsearch]
 
 config :app, App.Elasticsearch,

@@ -230,8 +230,7 @@ defmodule Skeleton.Elasticsearch do
       rows,
       [
         index: index,
-        type: "_doc",
-        httpoison_options: [timeout: :infinity]
+        type: "_doc"
       ] ++ (opts[:bulk_opts] || []),
       url_params
     )
