@@ -274,7 +274,7 @@ defmodule Skeleton.Elasticsearch do
 
     result =
       query
-      |> opts[:repo].all()
+      |> opts[:repo].all(opts[:opts])
       |> opts[:repo].preload(opts[:preload])
 
     if length(result) > 0 do
