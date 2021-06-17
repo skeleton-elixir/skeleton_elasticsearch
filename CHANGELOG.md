@@ -1,3 +1,8 @@
+1.2.8
+------
+#### Changes
+* Skeleton elasticsearch generate task fixed
+
 1.2.7
 ------
 #### Changes
