@@ -41,10 +41,10 @@ services:
     volumes:
       - elasticsearch_volume:/usr/share/elasticsearch/data
 
-  kibana:
-    image: kibana:7.8.1
-    environment:
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+  # kibana:
+  #   image: kibana:7.8.1
+  #   environment:
+  #     ELASTICSEARCH_HOSTS: http://elasticsearch:9200
 
 volumes:
   postgres_volume:
