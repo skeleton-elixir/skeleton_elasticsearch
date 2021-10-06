@@ -63,7 +63,7 @@ defmodule Skeleton.ElasticsearchTest do
 
       drop_index("*products*", [])
 
-      assert {:error, "no such index [skeleton_elasticsearch-products-test]"} =
+      assert {:error, %{"reason" => "no such index [skeleton_elasticsearch-products-test]"}} =
                get_index("products")
     end
   end
@@ -211,6 +211,14 @@ defmodule Skeleton.ElasticsearchTest do
 
       [res] = search("users", %{query: %{term: %{_id: user1.id}}})["hits"]["hits"]
       assert res["_source"]["name"] == "User 1"
+    end
+
+    test "search error" do
+      expected_error = ~r/^query malformed, empty clause found.*"illegal_argument_exception"/s
+
+      assert_raise RuntimeError, expected_error, fn ->
+        search("users", %{query: %{}})
+      end
     end
   end
 

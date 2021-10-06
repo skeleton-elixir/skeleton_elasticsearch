@@ -325,9 +325,19 @@ defmodule Skeleton.Elasticsearch do
     |> parse_response(config, index)
     |> case do
       {:ok, body} -> body
-      {:error, error} -> raise(RuntimeError, error)
+      {:error, error} -> raise(RuntimeError, format_search_error(error))
     end
   end
+
+  defp format_search_error(%{"reason" => reason} = error) do
+    """
+    #{reason}
+
+    #{Jason.encode!(error, pretty: true)}
+    """
+  end
+
+  defp format_search_error(error), do: error
 
   # Count
 
@@ -356,7 +366,7 @@ defmodule Skeleton.Elasticsearch do
 
     case response do
       {:ok, %{body: %{"error" => error}}} ->
-        {:error, error["reason"]}
+        {:error, error}
 
       {:ok, response} ->
         {:ok, response.body}
