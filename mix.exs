@@ -1,7 +1,7 @@
 defmodule SkeletonElasticsearch.MixProject do
   use Mix.Project
 
-  @version "1.2.8"
+  @version "1.2.9"
   @source_url "https://github.com/skeleton-elixir/skeleton_elasticsearch"
   @maintainers [
     "Diego Nogueira",

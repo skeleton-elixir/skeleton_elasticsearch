@@ -1,3 +1,8 @@
+1.2.9
+------
+#### Changes
+* Improvements error messages
+
 1.2.8
 ------
 #### Changes
