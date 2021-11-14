@@ -1,4 +1,8 @@
 defmodule Skeleton.Elasticsearch.Drop do
+  @moduledoc """
+  Skeleton drop index
+  """
+
   alias Skeleton.Elasticsearch.Config
 
   def run(_opts) do

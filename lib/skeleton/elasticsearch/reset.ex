@@ -1,4 +1,6 @@
 defmodule Skeleton.Elasticsearch.Reset do
+  @moduledoc false
+
   alias Skeleton.Elasticsearch.Config
 
   def run(opts) do

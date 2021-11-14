@@ -21,7 +21,14 @@ defmodule SkeletonElasticsearch.MixProject do
       maintainers: @maintainers,
       description: description(),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
@@ -38,9 +45,11 @@ defmodule SkeletonElasticsearch.MixProject do
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:elastix, "~> 0.9.0"},
       {:jason, "~> 1.2"},
-      {:ecto_sql, "~> 3.0"},
+      {:poison, "~> 3.1"},
+      {:ecto_sql, "~> 3.0", only: :test},
       {:postgrex, ">= 0.0.0", only: :test},
-      {:poison, "~> 3.1"}
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.10", only: :test}
     ]
   end
 

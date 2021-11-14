@@ -1,4 +1,8 @@
 defmodule Mix.Tasks.Skeleton.Elasticsearch.Reset do
+  @moduledoc """
+  The elasticsearch reset module
+  """
+
   def run(args) do
     Mix.Task.run("app.start", [])
 

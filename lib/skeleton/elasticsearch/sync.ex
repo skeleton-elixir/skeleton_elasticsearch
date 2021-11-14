@@ -1,4 +1,8 @@
 defmodule Skeleton.Elasticsearch.Sync do
+  @moduledoc """
+  Skeleton Sync module
+  """
+
   alias Skeleton.Elasticsearch.Config
 
   def run(opts) do

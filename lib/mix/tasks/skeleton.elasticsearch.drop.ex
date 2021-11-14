@@ -1,4 +1,8 @@
 defmodule Mix.Tasks.Skeleton.Elasticsearch.Drop do
+  @moduledoc """
+  The elasticsearch drop task
+  """
+
   def run(args) do
     Mix.Task.run("app.start", [])
 

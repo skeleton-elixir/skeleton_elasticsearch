@@ -1,4 +1,8 @@
 defmodule Mix.Tasks.Skeleton.Elasticsearch.Migrate do
+  @moduledoc """
+  The elasticsearch migrate
+  """
+
   @switches [quiet: :boolean, prefix: :string]
   @aliases [q: :quiet, p: :prefix]
 

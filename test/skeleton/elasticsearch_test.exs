@@ -36,7 +36,6 @@ defmodule Skeleton.ElasticsearchTest do
       assert index["mappings"]["properties"]["color"]["type"] == "keyword"
     end
 
-    # TODO: Verificar problema quando colocamos nome do indice sem o uso do *
     test "truncate_index" do
       create_document("products", 123, %{name: "product name"})
 

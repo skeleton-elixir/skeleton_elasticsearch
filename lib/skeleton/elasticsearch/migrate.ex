@@ -1,4 +1,7 @@
 defmodule Skeleton.Elasticsearch.Migrate do
+  @moduledoc false
+
+  require Logger
   alias Skeleton.Elasticsearch.Config
 
   def run(opts) do
@@ -22,8 +25,8 @@ defmodule Skeleton.Elasticsearch.Migrate do
       try do
         run_migrations(module, last_version, opts ++ [prefix: prefix])
       rescue
-        e in [RuntimeError, Mix.Error] -> IO.inspect(e.message <> " in #{prefix || "default"}")
-        e -> IO.inspect(e <> " in #{prefix || "default"}")
+        e in [RuntimeError, Mix.Error] -> Logger.info(e.message <> " in #{prefix || "default"}")
+        e -> Logger.info(e <> " in #{prefix || "default"}")
       end
     end)
   end
@@ -91,11 +94,11 @@ defmodule Skeleton.Elasticsearch.Migrate do
             elasticsearch.migrate_schema_version(version, opts)
 
             if !opts[:quiet] do
-              IO.inspect("#{inspect(module)} migrated")
+              Logger.info("#{inspect(module)} migrated")
             end
 
           {:error, error} ->
-            IO.inspect("#{inspect(module)} failed")
+            Logger.info("#{inspect(module)} failed")
             raise(error)
         end
       end)

@@ -3,23 +3,17 @@
   "autokill": true,
   "terminals": [
     {
-      "name": "App",
-      "focus": true,
+      "name": "Postgres",
       "commands": [
-        "docker-compose down",
-        "docker-compose up -d",
-        "docker-compose stop kibana",
-        "docker-compose exec app bash"
+        "pkill -9 -f postgres",
+        "~/.asdf/shims/postgres"
       ]
     },
     {
-      "name": "Git"
-    },
-    {
-      "name": "Kibana",
-      "execute": false,
+      "name": "Elasticsearch",
       "commands": [
-        "docker-compose start kibana && docker-compose logs -f kibana"
+        "pkill -9 -f elasticsearch",
+        "~/.asdf/shims/elasticsearch"
       ]
     }
   ]

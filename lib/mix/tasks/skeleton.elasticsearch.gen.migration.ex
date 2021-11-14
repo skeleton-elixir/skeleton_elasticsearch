@@ -1,4 +1,8 @@
 defmodule Mix.Tasks.Skeleton.Elasticsearch.Gen.Migration do
+  @moduledoc """
+  The generate migration module
+  """
+
   import Macro, only: [camelize: 1, underscore: 1]
   import Mix.Generator
 

@@ -1,4 +1,8 @@
 defmodule Skeleton.Elasticsearch do
+  @moduledoc """
+  The Elasticsearch module
+  """
+
   alias Skeleton.Elasticsearch.Config
   import Ecto.Query
 

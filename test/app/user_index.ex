@@ -1,4 +1,6 @@
 defmodule Skeleton.App.UserIndex do
+  @moduledoc false
+
   import Skeleton.App.Elasticsearch
   import Ecto.Query
 

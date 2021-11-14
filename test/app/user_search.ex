@@ -1,4 +1,6 @@
 defmodule Skeleton.App.UserSearch do
+  @moduledoc false
+
   use Skeleton.App.Search, index: "users"
 
   # Filters

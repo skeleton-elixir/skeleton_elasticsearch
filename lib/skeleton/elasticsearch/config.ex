@@ -1,4 +1,8 @@
 defmodule Skeleton.Elasticsearch.Config do
+  @moduledoc """
+  The Skeleton Config module
+  """
+
   def url(conf), do: config(conf, :url)
   def refresh(conf), do: config(conf, :refresh)
   def sort_param(conf), do: config(conf, :sort_param, "sort_by")
