@@ -37,6 +37,12 @@ defmodule Skeleton.App.UserSearch do
     })
   end
 
+  def compose(query, {"sort_by", "name"}, _params) do
+    add_query(query, %{
+      sort: [%{name: "asc"}]
+    })
+  end
+
   def compose(query, {"sort_by", "random"}, %{"random_seed" => seed}) do
     add_query(query, %{
       query: %{
@@ -57,6 +63,19 @@ defmodule Skeleton.App.UserSearch do
           terms: %{
             size: 10,
             field: "_id"
+          }
+        }
+      }
+    })
+  end
+
+  def compose(query, {"aggs_by", "admin"}, _params) do
+    add_query(query, %{
+      aggs: %{
+        admin_term: %{
+          terms: %{
+            size: 10,
+            field: "admin"
           }
         }
       }

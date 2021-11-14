@@ -66,7 +66,15 @@ defmodule Skeleton.Elasticsearch.Search do
   # Build Query
 
   def build_query(config, module, params, opts) do
-    params = stringfy_map(params)
+    params =
+      params
+      |> stringfy_map()
+      |> allow_params(opts[:allow])
+      |> deny_params(opts[:deny])
+      |> allow_sort_by_params(opts[:allow], config)
+      |> deny_sort_by_params(opts[:deny], config)
+      |> allow_aggs_by_params(opts[:allow], config)
+      |> deny_aggs_by_params(opts[:deny], config)
 
     config
     |> Config.start_query()
@@ -165,5 +173,106 @@ defmodule Skeleton.Elasticsearch.Search do
     end
 
     Enum.reduce(map, %{}, stringkeys)
+  end
+
+  # Allow sort by params
+
+  defp allow_sort_by_params(params, nil, _config), do: params
+
+  defp allow_sort_by_params(params, allow, config) do
+    allow_list_params(params, allow, Config.sort_param(config))
+  end
+
+  # Deny sort by params
+
+  defp deny_sort_by_params(params, nil, _config), do: params
+
+  defp deny_sort_by_params(params, deny, config) do
+    deny_list_params(params, deny, Config.sort_param(config))
+  end
+
+  # Allow aggs by params
+
+  defp allow_aggs_by_params(params, nil, _config), do: params
+
+  defp allow_aggs_by_params(params, allow, config) do
+    allow_list_params(params, allow, Config.aggs_param(config))
+  end
+
+  # Deny aggs by params
+
+  defp deny_aggs_by_params(params, nil, _config), do: params
+
+  defp deny_aggs_by_params(params, deny, config) do
+    deny_list_params(params, deny, Config.aggs_param(config))
+  end
+
+  # Allow list params
+
+  defp allow_list_params(params, allow, config_param) do
+    allow
+    |> Keyword.get(String.to_atom(config_param))
+    |> case do
+      p when is_list(p) ->
+        allow = Enum.map(p, &to_string/1)
+        sort_params = params[config_param] || []
+        allowed_sort = sort_params -- sort_params -- allow
+        Map.put(params, config_param, allowed_sort)
+
+      _ ->
+        params
+    end
+  end
+
+  # Deny list params
+
+  defp deny_list_params(params, deny, config_param) do
+    deny
+    |> Keyword.get(String.to_atom(config_param))
+    |> case do
+      p when is_list(p) ->
+        deny = Enum.map(p, &to_string/1)
+        sort_params = params[config_param] || []
+        allowed_sort = sort_params -- deny
+        Map.put(params, config_param, allowed_sort)
+
+      _ ->
+        params
+    end
+  end
+
+  # Allow params
+
+  defp allow_params(params, nil), do: params
+
+  defp allow_params(params, allow) do
+    allow =
+      Enum.map(allow, fn a ->
+        case a do
+          a when is_atom(a) -> to_string(a)
+          a when is_binary(a) -> a
+          {k, _} -> to_string(k)
+          _ -> ""
+        end
+      end)
+
+    Map.take(params, allow)
+  end
+
+  # deny params
+
+  defp deny_params(params, nil), do: params
+
+  defp deny_params(params, deny) do
+    deny =
+      Enum.map(deny, fn a ->
+        case a do
+          a when is_atom(a) -> to_string(a)
+          a when is_binary(a) -> a
+          _ -> ""
+        end
+      end)
+
+    Map.drop(params, deny)
   end
 end

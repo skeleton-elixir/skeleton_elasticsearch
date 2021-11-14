@@ -112,6 +112,199 @@ defmodule Skeleton.UserSearchTest do
     assert ctx.user.id == get_in(res, ["aggregations", "id_term", "buckets", Access.at(0), "key"])
   end
 
+  # Allow params
+
+  test "allowing params" do
+    query =
+      UserSearch.build_query(%{"id" => "1", "name" => "full name", admin: true},
+        allow: [:id]
+      )
+
+    assert query == %{query: %{bool: %{must: [%{term: %{_id: "1"}}]}}, size: 10}
+
+    query =
+      UserSearch.build_query(%{"id" => "1", "name" => "full name", admin: true},
+        allow: [:id, :name]
+      )
+
+    assert query == %{
+             query: %{bool: %{must: [%{term: %{_id: "1"}}, %{match: %{name: "full name"}}]}},
+             size: 10
+           }
+  end
+
+  # Deny params
+
+  test "denying params" do
+    query =
+      UserSearch.build_query(%{"id" => "1", "name" => "full name", admin: true},
+        deny: [:id]
+      )
+
+    assert query == %{query: %{bool: %{must: [%{match: %{name: "full name"}}]}}, size: 10}
+
+    query =
+      UserSearch.build_query(%{"id" => "1", "name" => "full name", admin: true},
+        deny: [:id, :name]
+      )
+
+    assert query == %{size: 10}
+  end
+
+  # Allow sort by params
+
+  test "allowing sort by params" do
+    query =
+      UserSearch.build_query(
+        %{
+          "id" => "1",
+          "name" => "full name",
+          admin: true,
+          sort_by: [
+            "inserted_at_desc",
+            "name"
+          ]
+        },
+        allow: [:id, sort_by: [:name]]
+      )
+
+    assert query == %{
+             query: %{bool: %{must: [%{term: %{_id: "1"}}]}},
+             size: 10,
+             sort: [%{name: "asc"}]
+           }
+
+    query =
+      UserSearch.build_query(
+        %{"id" => "1", "name" => "full name", admin: true, sort_by: ["inserted_at_desc", "name"]},
+        allow: [:id, :name, sort_by: [:inserted_at_desc, :name]]
+      )
+
+    assert query == %{
+             query: %{bool: %{must: [%{term: %{_id: "1"}}, %{match: %{name: "full name"}}]}},
+             size: 10,
+             sort: [%{inserted_at: "desc"}, %{name: "asc"}]
+           }
+  end
+
+  # Deny sort by params
+
+  test "denying sort by params" do
+    query =
+      UserSearch.build_query(
+        %{
+          "id" => "1",
+          "name" => "full name",
+          admin: true,
+          sort_by: [
+            "inserted_at_desc",
+            "name"
+          ]
+        },
+        deny: [:name, sort_by: [:inserted_at_desc]]
+      )
+
+    assert query == %{
+             query: %{bool: %{must: [%{term: %{_id: "1"}}]}},
+             size: 10,
+             sort: [%{name: "asc"}]
+           }
+
+    query =
+      UserSearch.build_query(
+        %{"id" => "1", "name" => "full name", admin: true, sort_by: ["inserted_at_desc", "name"]},
+        allow: [:id, :name, sort_by: [:inserted_at_desc, :name]]
+      )
+
+    assert query == %{
+             query: %{bool: %{must: [%{term: %{_id: "1"}}, %{match: %{name: "full name"}}]}},
+             size: 10,
+             sort: [%{inserted_at: "desc"}, %{name: "asc"}]
+           }
+  end
+
+  # Allow aggs by params
+
+  test "allowing aggs by params" do
+    query =
+      UserSearch.build_query(
+        %{
+          "id" => "1",
+          "name" => "full name",
+          sort_by: [
+            "name"
+          ],
+          aggs_by: ["id", "admin"]
+        },
+        allow: [:id, sort_by: [:name], aggs_by: [:id]]
+      )
+
+    assert query == %{
+             aggs: %{id_term: %{terms: %{field: "_id", size: 10}}},
+             query: %{bool: %{must: [%{term: %{_id: "1"}}]}},
+             size: 10,
+             sort: [%{name: "asc"}]
+           }
+
+    query =
+      UserSearch.build_query(
+        %{
+          "id" => "1",
+          "name" => "full name",
+          sort_by: [
+            "name"
+          ],
+          aggs_by: ["id", "admin"]
+        },
+        allow: [:id, sort_by: [:name], aggs_by: [:id, "admin"]]
+      )
+
+    assert query == %{
+             aggs: %{
+               admin_term: %{terms: %{field: "admin", size: 10}},
+               id_term: %{terms: %{field: "_id", size: 10}}
+             },
+             query: %{bool: %{must: [%{term: %{_id: "1"}}]}},
+             size: 10,
+             sort: [%{name: "asc"}]
+           }
+  end
+
+  # Deny aggs by params
+
+  test "denying aggs by params" do
+    query =
+      UserSearch.build_query(
+        %{
+          "id" => "1",
+          "name" => "full name",
+          sort_by: [
+            "name"
+          ],
+          aggs_by: [
+            "id",
+            "admin"
+          ]
+        },
+        deny: [:name, aggs_by: [:admin]]
+      )
+
+    assert query == %{
+             aggs: %{id_term: %{terms: %{field: "_id", size: 10}}},
+             query: %{bool: %{must: [%{term: %{_id: "1"}}]}},
+             size: 10,
+             sort: [%{name: "asc"}]
+           }
+
+    query =
+      UserSearch.build_query(
+        %{"id" => "1", "name" => "full name", sort_by: ["name"], aggs_by: [:name]},
+        deny: [:id, :name, sort_by: [:name], aggs_by: [:name]]
+      )
+
+    assert query == %{size: 10}
+  end
+
   # Helpers
 
   defp create_user(params \\ %{}) do
