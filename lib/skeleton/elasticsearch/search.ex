@@ -28,17 +28,19 @@ defmodule Skeleton.Elasticsearch.Search do
 
       def start_query(_params), do: %{}
 
-      defoverridable start_query: 1
+      def end_query(query, _params), do: query
 
       @before_compile Skeleton.Elasticsearch.Search
+
+      defoverridable start_query: 1, end_query: 2
     end
   end
 
   defmacro __before_compile__(_) do
     quote do
-      def filter_by(query, _, _params), do: query
-      def sort_by(query, _, _params), do: query
-      def aggs_by(query, _, _params), do: query
+      def compose(query, _, _params), do: query
+
+      defoverridable compose: 3
     end
   end
 
@@ -69,29 +71,30 @@ defmodule Skeleton.Elasticsearch.Search do
     config
     |> Config.start_query()
     |> Map.merge(module.start_query(params))
-    |> build_filters(module, params)
-    |> build_sorts(config, module, params)
+    |> build_composers(module, params)
+    |> build_sort_by_composers(config, module, params)
     |> build_size(opts)
     |> build_from(opts)
-    |> build_aggs(config, module, params)
+    |> build_aggs_by_composers(config, module, params)
     |> build_function_score()
+    |> build_end_query(module, params)
   end
 
   # Build filters
 
-  defp build_filters(query, module, params) do
+  defp build_composers(query, module, params) do
     Enum.reduce(params, query, fn {k, v}, search ->
-      apply(module, :filter_by, [search, {to_string(k), v}, params])
+      apply(module, :compose, [search, {to_string(k), v}, params])
     end)
   end
 
   # Build sorts
 
-  defp build_sorts(query, config, module, params) do
+  defp build_sort_by_composers(query, config, module, params) do
     params
     |> Map.get(Config.sort_param(config), [])
-    |> Enum.reduce(query, fn param, acc_query ->
-      apply(module, :sort_by, [acc_query, to_string(param), params])
+    |> Enum.reduce(query, fn o, acc_query ->
+      apply(module, :compose, [acc_query, {Config.sort_param(config), to_string(o)}, params])
     end)
   end
 
@@ -117,11 +120,11 @@ defmodule Skeleton.Elasticsearch.Search do
 
   # Build aggs
 
-  defp build_aggs(query, config, module, params) do
+  defp build_aggs_by_composers(query, config, module, params) do
     params
     |> Map.get(Config.aggs_param(config), [])
-    |> Enum.reduce(query, fn param, acc_query ->
-      apply(module, :aggs_by, [acc_query, to_string(param), params])
+    |> Enum.reduce(query, fn o, acc_query ->
+      apply(module, :compose, [acc_query, {Config.aggs_param(config), to_string(o)}, params])
     end)
   end
 
@@ -147,6 +150,12 @@ defmodule Skeleton.Elasticsearch.Search do
   end
 
   defp build_function_score(query), do: query
+
+  # End query
+
+  defp build_end_query(query, module, params) do
+    module.end_query(query, params)
+  end
 
   # stringfy map
 

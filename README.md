@@ -128,9 +128,7 @@ end
 defmodule App.UserSearch do
   use App.Search, index: "users"
 
-  # Filters
-
-  def filter_by(query, {"id", id}, _params) do
+  def compose(query, {"id", id}, _params) do
     add_query(query, %{
       query: %{
         bool: %{
@@ -144,7 +142,7 @@ defmodule App.UserSearch do
     })
   end
 
-  def filter_by(query, {"name", name}, _params) do
+  def compose(query, {"name", name}, _params) do
     add_query(query, %{
       query: %{
         bool: %{
@@ -158,17 +156,13 @@ defmodule App.UserSearch do
     })
   end
 
-  # Sort By
-
-  def sort_by(query, "inserted_at_desc", _params) do
+  def compose(query, {"sort_by", "inserted_at_desc"}, _params) do
     add_query(query, %{
       sort: [%{inserted_at: "desc"}]
     })
   end
 
-  # Aggs
-
-  def aggs_by(query, "id", _params) do
+  def compose(query, {"aggs_by", "id"}, _params) do
     add_query(query, %{
       aggs: %{
         id_term: %{
