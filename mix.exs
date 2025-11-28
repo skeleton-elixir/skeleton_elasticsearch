@@ -36,9 +36,9 @@ defmodule SkeletonElasticsearch.MixProject do
   defp deps do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:elastix, "~> 0.9.0"},
-      {:jason, "~> 1.2"},
-      {:ecto_sql, "~> 3.0"},
+      {:elastix, "~> 0.10.0"},
+      {:jason, "~> 1.4"},
+      {:ecto_sql, "~> 3.11"},
       {:postgrex, ">= 0.0.0", only: :test},
       {:poison, "~> 3.1"}
     ]

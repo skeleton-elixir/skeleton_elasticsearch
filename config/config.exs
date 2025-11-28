@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # Sekeleton
 config :skeleton_elasticsearch, elasticsearch_modules: [Skeleton.App.Elasticsearch]

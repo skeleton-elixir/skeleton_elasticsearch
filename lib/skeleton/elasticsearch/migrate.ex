@@ -23,7 +23,7 @@ defmodule Skeleton.Elasticsearch.Migrate do
         run_migrations(module, last_version, opts ++ [prefix: prefix])
       rescue
         e in [RuntimeError, Mix.Error] -> IO.inspect(e.message <> " in #{prefix || "default"}")
-        e -> IO.inspect(e <> " in #{prefix || "default"}")
+        e -> IO.inspect(Exception.message(e) <> " in #{prefix || "default"}")
       end
     end)
   end
